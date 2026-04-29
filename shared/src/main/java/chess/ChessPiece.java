@@ -75,7 +75,7 @@ public class ChessPiece {
             return calculator.calculateRook();
         }
         else if (piece.getPieceType() == PieceType.PAWN) {
-            return List.of(new ChessMove(new ChessPosition(5,4),new ChessPosition(1,8), null));
+            return calculator.calculatePawn();
         }
         System.out.print("This piece is not a chess piece, this is an error");
         return List.of();
