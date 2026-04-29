@@ -59,13 +59,17 @@ public class ChessPiece {
             return calculator.calculateKing();
         }
         else if (piece.getPieceType() == PieceType.QUEEN) {
-            return List.of(new ChessMove(new ChessPosition(5,4),new ChessPosition(1,8), null));
+            var rookList = calculator.calculateRook();
+            MovementCalculator calculator2 = new MovementCalculator(board, myPosition);
+            var bishopList = calculator2.calculateBishop();
+            rookList.addAll(bishopList);
+            return rookList;
         }
         else if (piece.getPieceType() == PieceType.BISHOP) {
-            return List.of(new ChessMove(new ChessPosition(5,4),new ChessPosition(1,8), null));
+            return calculator.calculateBishop();
         }
         else if (piece.getPieceType() == PieceType.KNIGHT) {
-            return List.of(new ChessMove(new ChessPosition(5,4),new ChessPosition(1,8), null));
+            return calculator.calculateKnight();
         }
         else if (piece.getPieceType() == PieceType.ROOK) {
             return calculator.calculateRook();

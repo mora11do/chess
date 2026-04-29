@@ -59,25 +59,45 @@ public class MovementCalculator {
     }
 
     public ArrayList<ChessMove> calculateRook(){
-        moveList.addAll(rookBishopMovementLooper("positive", "row"));
-        moveList.addAll(rookBishopMovementLooper("positive", "col"));
-        moveList.addAll(rookBishopMovementLooper("negative", "row"));
-        moveList.addAll(rookBishopMovementLooper("negative", "col"));
+        moveList.addAll(rookBishopMovementLooper("positive", "row", "rook"));
+        moveList.addAll(rookBishopMovementLooper("positive", "col", "rook"));
+        moveList.addAll(rookBishopMovementLooper("negative", "row", "rook"));
+        moveList.addAll(rookBishopMovementLooper("negative", "col", "rook"));
         return moveList;
     }
 
-    public ArrayList<ChessMove> rookBishopMovementLooper(String positiveOrNegative, String colOrRow){
+    public ArrayList<ChessMove> calculateBishop(){
+        moveList.addAll(rookBishopMovementLooper("positive", "row", "bishop"));
+        moveList.addAll(rookBishopMovementLooper("positive", "col", "bishop"));
+        moveList.addAll(rookBishopMovementLooper("negative", "row", "bishop"));
+        moveList.addAll(rookBishopMovementLooper("negative", "col", "bishop"));
+        return moveList;
+    }
+
+    public ArrayList<ChessMove> rookBishopMovementLooper(String positiveOrNegative, String colOrRow, String bishopOrRook){
         int rowNum = 0;
         int colNum = 0;
         ArrayList<ChessMove> partialMoveList = new ArrayList<>();
         for (int i = 1; i<9; i++) {
             if (colOrRow.equals("col")){
-                rowNum = 0;
-                colNum = i;
+                if (bishopOrRook.equals("rook")) {
+                    rowNum = 0;
+                    colNum = i;
+                }
+                else{
+                    rowNum = i;
+                    colNum = i;
+                }
             }
-            else{
-                rowNum = i;
-                colNum = 0;
+            else if (colOrRow.equals("row")){
+                if (bishopOrRook.equals("rook")) {
+                    rowNum = i;
+                    colNum = 0;
+                }
+                else{
+                    rowNum = i;
+                    colNum = -i;
+                }
             }
             if (positiveOrNegative.equals("negative")){
                 rowNum = -rowNum;
@@ -98,5 +118,20 @@ public class MovementCalculator {
             }
         }
         return partialMoveList;
+    }
+
+    public ArrayList<ChessMove> calculateKnight(){
+        int[][] directions = {{-2,1},{-1,2},{1,2},{2,1},{2,-1},{1,-2},{-1,-2},{-2,-1}};
+        for (int[] direction: directions) {
+            ChessPosition newPosition = new ChessPosition(myPosition.getRow()+direction[0], myPosition.getColumn()+direction[1]);
+            String message = isThisSpaceControlledByEnemyOrEmptyAndInbounds(newPosition);
+            if (message.startsWith("Valid")) {
+                moveList.add(new ChessMove(
+                        new ChessPosition(myPosition.getRow(), myPosition.getColumn()),
+                        new ChessPosition(newPosition.getRow(), newPosition.getColumn()),
+                        null));
+            }
+        }
+        return moveList;
     }
 }
