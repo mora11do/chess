@@ -49,23 +49,104 @@ public class ChessPiece {
      * Used in determining which moves are valid by checking in bounds and team colors.
      * @param myPosition The position of the piece I want to move
      * @param newPosition The position of the location I want to move to
-     * @return Whether or not a piece should be able to move there according to these rules.
+     * @return String which is self-explanatory.
      */
-    public boolean isThisSpaceControlledByEnemyOrEmptyAndInbounds(ChessBoard board, ChessPosition myPosition, ChessPosition newPosition){
+    public String isThisSpaceControlledByEnemyOrEmptyAndInbounds(ChessBoard board, ChessPosition myPosition, ChessPosition newPosition){
         ChessPiece piece = board.getPiece(myPosition);
         ChessGame.TeamColor myColor = piece.getTeamColor();
         if (newPosition.getRow() < 1 || newPosition.getRow() > 8){
-            return false;
+            return "Invalid: Out of Bounds";
         }
         if (newPosition.getColumn() < 1 || newPosition.getColumn() > 8) {
-            return false;
+            return "Invalid: Out of Bounds";
         }
         if (board.getPiece(newPosition) != null){
             if (board.getPiece(newPosition).getTeamColor() == myColor) {
-                return false;
+                return "Invalid: Your team is there";
+            }
+            else {
+                return "Valid: Captured";
+            }
+
+        }
+        return "Valid: Empty space";
+    }
+
+    public ArrayList<ChessMove> kingMovement(ChessBoard board, ChessPosition myPosition) {
+        ArrayList<ChessMove> moveList = new ArrayList<ChessMove>();
+        int[][] directions = {{1,1},{1,0},{1,-1},{0,1},{0,-1},{-1,1},{-1,0},{-1,-1}};
+        for (int[] direction: directions) {
+            ChessPosition newPosition = new ChessPosition(myPosition.getRow()+direction[0], myPosition.getColumn()+direction[1]);
+            String message = isThisSpaceControlledByEnemyOrEmptyAndInbounds(board, myPosition, newPosition);
+            if (message.startsWith("Valid")) {
+                moveList.add(new ChessMove(
+                        new ChessPosition(myPosition.getRow(), myPosition.getColumn()),
+                        new ChessPosition(newPosition.getRow(), newPosition.getColumn()),
+                        null));
             }
         }
-        return true;
+        return moveList;
+    }
+
+    public ArrayList<ChessMove> rookMovement(ChessBoard board, ChessPosition myPosition) {
+        ArrayList<ChessMove> moveList = new ArrayList<ChessMove>();
+        int rowNum=0;
+        int colNum=0;
+        for (int rowOrCol = 0; rowOrCol<2; rowOrCol++){
+
+            /* need to do negatives first and then positives to help with if a piece is blocking future positions */
+            for (int i = -1; i>-9; i--) {
+                if (rowOrCol == 0){
+                    rowNum = i;
+                    colNum = 0;
+                }
+                else{
+                    rowNum = 0;
+                    colNum = i;
+                }
+                ChessPosition newPosition = new ChessPosition(myPosition.getRow() + rowNum, myPosition.getColumn() + colNum);
+                String message = isThisSpaceControlledByEnemyOrEmptyAndInbounds(board, myPosition, newPosition);
+                if (message.startsWith("Valid")) {
+                    moveList.add(new ChessMove(
+                            new ChessPosition(myPosition.getRow(), myPosition.getColumn()),
+                            new ChessPosition(newPosition.getRow(), newPosition.getColumn()),
+                            null));
+                    if (message.equals("Valid: Captured")){
+                        break;
+                    }
+                }
+                else{
+                    break;
+                }
+            }
+
+            /* need to do negatives first and then positives to help with if a piece is blocking future positions */
+            for (int i = 1; i<9; i++) {
+                if (rowOrCol == 0){
+                    rowNum = i;
+                    colNum = 0;
+                }
+                else{
+                    rowNum = 0;
+                    colNum = i;
+                }
+                ChessPosition newPosition = new ChessPosition(myPosition.getRow() + rowNum, myPosition.getColumn() + colNum);
+                String message = isThisSpaceControlledByEnemyOrEmptyAndInbounds(board, myPosition, newPosition);
+                if (message.startsWith("Valid")) {
+                    moveList.add(new ChessMove(
+                            new ChessPosition(myPosition.getRow(), myPosition.getColumn()),
+                            new ChessPosition(newPosition.getRow(), newPosition.getColumn()),
+                            null));
+                    if (message.equals("Valid: Captured")){
+                        break;
+                    }
+                }
+                else{
+                    break;
+                }
+            }
+        }
+        return moveList;
     }
 
     /**
@@ -77,19 +158,8 @@ public class ChessPiece {
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         ChessPiece piece = board.getPiece(myPosition);
-        ArrayList<ChessMove> moveList = new ArrayList<ChessMove>();
         if (piece.getPieceType() == PieceType.KING) {
-            int[][] kingDirections = {{1,1},{1,0},{1,-1},{0,1},{0,-1},{-1,1},{-1,0},{-1,-1}};
-            for (int[] direction: kingDirections) {
-                ChessPosition newPosition = new ChessPosition(myPosition.getRow()+direction[0], myPosition.getColumn()+direction[1]);
-                if (isThisSpaceControlledByEnemyOrEmptyAndInbounds(board, myPosition, newPosition)) {
-                    moveList.add(new ChessMove(
-                            new ChessPosition(myPosition.getRow(), myPosition.getColumn()),
-                            new ChessPosition(newPosition.getRow(), newPosition.getColumn()),
-                            null));
-                }
-            }
-            return moveList;
+            return kingMovement(board,myPosition);
         }
         else if (piece.getPieceType() == PieceType.QUEEN) {
             return List.of(new ChessMove(new ChessPosition(5,4),new ChessPosition(1,8), null));
@@ -101,7 +171,7 @@ public class ChessPiece {
             return List.of(new ChessMove(new ChessPosition(5,4),new ChessPosition(1,8), null));
         }
         else if (piece.getPieceType() == PieceType.ROOK) {
-            return List.of(new ChessMove(new ChessPosition(5,4),new ChessPosition(1,8), null));
+            return rookMovement(board,myPosition);
         }
         else if (piece.getPieceType() == PieceType.PAWN) {
             return List.of(new ChessMove(new ChessPosition(5,4),new ChessPosition(1,8), null));
