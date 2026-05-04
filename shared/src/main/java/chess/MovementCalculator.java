@@ -5,12 +5,12 @@ import java.util.ArrayList;
 public class MovementCalculator {
     private final ChessBoard board;
     private final ChessPosition myPosition;
-    private ArrayList<ChessMove> moveList;
+    private final ArrayList<ChessMove> moveList;
 
     public MovementCalculator(ChessBoard board, ChessPosition myPosition) {
         this.board = board;
         this.myPosition = myPosition;
-        this.moveList = new ArrayList<ChessMove>();
+        this.moveList = new ArrayList<>();
     }
 
     /**
@@ -40,20 +40,28 @@ public class MovementCalculator {
     }
 
     /**
+     * Creates a chess move to the new position (no promo)
+     * @param newPosition the position to move to
+     * @return a chess move
+     */
+    public ChessMove createChessMoveInThisNewPositionWithNoPromo(ChessPosition newPosition){
+        return new ChessMove(
+                new ChessPosition(myPosition.getRow(), myPosition.getColumn()),
+                new ChessPosition(newPosition.getRow(), newPosition.getColumn()),
+                null);
+    }
+
+    /**
      * I just saw this exact some chunk of code repeated everywhere so I made it a function.
      * It will find the next position based off of relative coordiantes given
      * and then will see if that move is valid, and then add that move to moveList if it is.
      * @param direction Where you want to move to
      */
-
     public void addToMoveListIfValid(int[]direction){
         ChessPosition newPosition = new ChessPosition(myPosition.getRow()+direction[0], myPosition.getColumn()+direction[1]);
         String message = isThisSpaceControlledByEnemyOrEmptyAndInbounds(newPosition);
         if (message.startsWith("Valid")) {
-            moveList.add(new ChessMove(
-                    new ChessPosition(myPosition.getRow(), myPosition.getColumn()),
-                    new ChessPosition(newPosition.getRow(), newPosition.getColumn()),
-                    null));
+            moveList.add(createChessMoveInThisNewPositionWithNoPromo(newPosition));
         }
     }
 
@@ -220,10 +228,7 @@ public class MovementCalculator {
             if (message.startsWith("Valid: Captured")) {
                 /* This is for normal attacks with NO PROMO*/
                 if (newPosition.getRow() != promoRow) {
-                    moveList.add(new ChessMove(
-                            new ChessPosition(myPosition.getRow(), myPosition.getColumn()),
-                            new ChessPosition(newPosition.getRow(), newPosition.getColumn()),
-                            null));
+                    moveList.add(createChessMoveInThisNewPositionWithNoPromo(newPosition));
                 }
                 /* This is for attacks WITH PROMO*/
                 else{
