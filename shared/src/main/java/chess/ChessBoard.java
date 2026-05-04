@@ -1,5 +1,6 @@
 package chess;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -72,6 +73,24 @@ public class ChessBoard {
             }
 
         }
+    }
+
+    public ChessBoard duplicate(){
+        ArrayList<ChessPosition> allPossibleChessPositions = new ArrayList<>();
+        for (int i=1; i<9; i++){
+            for (int j=1; j<9; j++){
+                ChessPosition position = new ChessPosition(i,j);
+                allPossibleChessPositions.add(position);
+            }
+        }
+        ChessBoard duplicateBoard = new ChessBoard();
+        for (ChessPosition position: allPossibleChessPositions) {
+            if (this.getPiece(position) != null){
+                ChessPiece piece = this.getPiece(position);
+                duplicateBoard.addPiece(position, piece);
+            }
+        }
+        return duplicateBoard;
     }
 
     @Override

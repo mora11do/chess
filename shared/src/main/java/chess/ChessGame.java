@@ -84,13 +84,17 @@ public class ChessGame {
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
         ChessPiece piece = board.getPiece(startPosition);
+        ArrayList<ChessMove> validMoves = new ArrayList<ChessMove>();
         Collection<ChessMove> moves = piece.pieceMoves(board, startPosition);
-        if (moves.isEmpty()){
+//        if (moves.isEmpty()){
             return null;
-        }
-        else {
-            return moves;
-        }
+//        }
+//        else {
+//            for (ChessMove move: moves){
+//                if
+//            }
+//            return moves;
+//        }
     }
 
     /**
@@ -100,7 +104,48 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
-        throw new RuntimeException("Not implemented");
+        var moves = allMovesIncludingInvalid();
+        if (!moves.contains(move)){
+            throw new InvalidMoveException("That move is invalid");
+        }
+
+        ChessBoard duplicateBoard = board.duplicate();
+        ChessPosition startPosition = move.getStartPosition();
+        ChessPosition endPosition = move.getEndPosition();
+        ChessPiece piece = duplicateBoard.getPiece(startPosition);
+
+        if (piece.getTeamColor() != teamTurn){
+            throw new InvalidMoveException("It's not your turn bruh");
+        }
+
+        duplicateBoard.addPiece(move.getEndPosition(), piece);
+        duplicateBoard.addPiece(startPosition,null);
+        var teamColor = piece.getTeamColor();
+        if (teamColor == TeamColor.WHITE){
+            if (isInCheck(TeamColor.WHITE)){
+                throw new InvalidMoveException("That move will put you in check");
+            }
+        }
+        else{
+            if (isInCheck(TeamColor.BLACK)){
+                throw new InvalidMoveException("That move will put you in check");
+            }
+        }
+        /* if you made it this far, there was no error in the move, so let's do it for real */
+        if (move.getPromotionPiece() == null){
+            board.addPiece(endPosition, piece);
+        }
+        else{
+            board.addPiece(endPosition, new ChessPiece(piece.getTeamColor(), move.getPromotionPiece()));
+        }
+        board.addPiece(startPosition,null);
+
+        if (teamTurn == TeamColor.WHITE){
+            teamTurn = TeamColor.BLACK;
+        }
+        else{
+            teamTurn = TeamColor.WHITE;
+        }
     }
 
     /**
