@@ -88,6 +88,18 @@ public class ChessGame {
         return runningListOfMoves;
     }
 
+    public Collection<ChessMove> allMovesForSpecificColorONLYValid(TeamColor color){
+        ArrayList<ChessMove> runningListOfMoves = new ArrayList<>();
+        ArrayList<ChessPosition> allPossibleChessPositions = this.allChessPositions();
+        for (ChessPosition position:allPossibleChessPositions){
+            ChessPiece piece = board.getPiece(position);
+            if (piece != null && piece.getTeamColor() == color) {
+                runningListOfMoves.addAll(validMoves(position));
+            }
+        }
+        return runningListOfMoves;
+    }
+
     /**
      * Gets all valid moves for a piece at the given location
      *
@@ -234,7 +246,10 @@ public class ChessGame {
      * @return True if the specified team is in checkmate
      */
     public boolean isInCheckmate(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+        if (allMovesForSpecificColorONLYValid(teamColor).isEmpty()){
+            return true;
+        }
+        return false;
     }
 
     /**
