@@ -102,7 +102,7 @@ public class ChessGame {
         for (ChessMove move:allValidAndInvalidMovesForThisPiece){
             ChessGame testingGame = makeDuplicateChessGame();
             try{
-                testingGame.makeMove(move);
+                testingGame.makeMove(move, true);
                 listOfValidMoves.add(move);
             }
             catch (InvalidMoveException ex){
@@ -112,13 +112,23 @@ public class ChessGame {
         return listOfValidMoves;
     }
 
+
     /**
-     * Makes a move in the chess board specified
+     * Makes a move
      *
      * @param move chess move to perform
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
+        makeMove(move, false);
+    }
+
+    /**
+     * @param move chess move to perform
+     * @param ignoreTeamColor literally only used for the one super weird test case that tries to make an invalid move with the wrong team color
+     * @throws InvalidMoveException if move is invalid
+     */
+    public void makeMove(ChessMove move, boolean ignoreTeamColor) throws InvalidMoveException {
         var moves = allMovesIncludingInvalid();
         if (!moves.contains(move)){
             throw new InvalidMoveException("That move is invalid");
@@ -128,7 +138,7 @@ public class ChessGame {
         ChessPiece piece = board.getPiece(startPosition);
 
         var teamColor = piece.getTeamColor();
-        if (teamColor != teamTurn){
+        if (teamColor != teamTurn && !ignoreTeamColor){
             throw new InvalidMoveException("It's not your turn bruh");
         }
 
