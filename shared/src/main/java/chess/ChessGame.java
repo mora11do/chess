@@ -115,12 +115,12 @@ public class ChessGame {
         for (ChessMove move: moves){
             ChessPosition endPosition = move.getEndPosition();
             if (teamColor == TeamColor.WHITE) {
-                if (endPosition.getRow() == whiteKingPosition.getRow() && endPosition.getColumn() == whiteKingPosition.getColumn()){
+                if (endPosition.equals(whiteKingPosition)){
                     return true;
                 }
             }
             else{
-                if (endPosition.getRow() == blackKingPosition.getRow() && endPosition.getColumn() == blackKingPosition.getColumn()){
+                if (endPosition.equals(blackKingPosition)){
                     return true;
                 }
             }
