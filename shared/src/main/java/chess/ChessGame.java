@@ -15,8 +15,11 @@ public class ChessGame {
     private ChessPosition whiteKingPosition = new ChessPosition(1,5);
     private ChessPosition blackKingPosition = new ChessPosition(8,5);
 
-    public ChessGame() {
+    public ChessGame(ChessBoard board) {
+        this.board = board;
+    }
 
+    public ChessGame() {
     }
 
     /**
@@ -43,6 +46,16 @@ public class ChessGame {
         BLACK
     }
 
+
+    /**
+     * Makes a copy of this chess game and fixes the team turn and board to be identical
+     * @return a duplicate chess game
+     */
+    public ChessGame makeDuplicateChessGame(){
+        ChessGame duplicateChessGame = new ChessGame(board.duplicate());
+        duplicateChessGame.setTeamTurn(this.teamTurn);
+        return duplicateChessGame;
+    }
 
     /**
      * Gives every square inside the board as a chess position. Used for iteration.
@@ -84,21 +97,23 @@ public class ChessGame {
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
         ChessPiece piece = board.getPiece(startPosition);
-        ArrayList<ChessMove> validMoves = new ArrayList<ChessMove>();
-        Collection<ChessMove> moves = piece.pieceMoves(board, startPosition);
-//        if (moves.isEmpty()){
-            return null;
-//        }
-//        else {
-//            for (ChessMove move: moves){
-//                if
-//            }
-//            return moves;
-//        }
+        ArrayList<ChessMove> listOfValidMoves = new ArrayList<ChessMove>();
+        Collection<ChessMove> allValidAndInvalidMovesForThisPiece = piece.pieceMoves(board, startPosition);
+        for (ChessMove move:allValidAndInvalidMovesForThisPiece){
+            ChessGame testingGame = makeDuplicateChessGame();
+            try{
+                testingGame.makeMove(move);
+                listOfValidMoves.add(move);
+            }
+            catch (InvalidMoveException ex){
+                continue;
+            }
+        }
+        return listOfValidMoves;
     }
 
     /**
-     * Makes a move in the chess game
+     * Makes a move in the chess board specified
      *
      * @param move chess move to perform
      * @throws InvalidMoveException if move is invalid
@@ -108,26 +123,34 @@ public class ChessGame {
         if (!moves.contains(move)){
             throw new InvalidMoveException("That move is invalid");
         }
-
-        ChessBoard duplicateBoard = board.duplicate();
         ChessPosition startPosition = move.getStartPosition();
         ChessPosition endPosition = move.getEndPosition();
-        ChessPiece piece = duplicateBoard.getPiece(startPosition);
+        ChessPiece piece = board.getPiece(startPosition);
 
-        if (piece.getTeamColor() != teamTurn){
+        var teamColor = piece.getTeamColor();
+        if (teamColor != teamTurn){
             throw new InvalidMoveException("It's not your turn bruh");
         }
 
-        duplicateBoard.addPiece(move.getEndPosition(), piece);
+
+        ChessGame testingGame = makeDuplicateChessGame();
+        ChessBoard duplicateBoard = testingGame.board;
+        ChessPiece duplicatePiece = duplicateBoard.getPiece(startPosition);
+
+        if (move.getPromotionPiece() == null){
+            duplicateBoard.addPiece(endPosition, duplicatePiece);
+        }
+        else{
+            duplicateBoard.addPiece(endPosition, new ChessPiece(duplicatePiece.getTeamColor(), move.getPromotionPiece()));
+        }
         duplicateBoard.addPiece(startPosition,null);
-        var teamColor = piece.getTeamColor();
         if (teamColor == TeamColor.WHITE){
-            if (isInCheck(TeamColor.WHITE)){
+            if (testingGame.isInCheck(TeamColor.WHITE)){
                 throw new InvalidMoveException("That move will put you in check");
             }
         }
         else{
-            if (isInCheck(TeamColor.BLACK)){
+            if (testingGame.isInCheck(TeamColor.BLACK)){
                 throw new InvalidMoveException("That move will put you in check");
             }
         }
