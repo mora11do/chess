@@ -1,5 +1,6 @@
 package chess;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 /**
@@ -11,6 +12,8 @@ import java.util.Collection;
 public class ChessGame {
     private ChessBoard board;
     private TeamColor teamTurn = TeamColor.WHITE;
+    private ChessPosition whiteKingSquare = new ChessPosition(1,5);
+    private ChessPosition blackKingSquare = new ChessPosition(8,5);
 
     public ChessGame() {
 
@@ -41,6 +44,26 @@ public class ChessGame {
     }
 
     /**
+     * Calls pieceMoves on every square on the board to find every possible move, even if invalid. Helpful for iteration.
+     * @return A collection of every possible move.
+     */
+    public Collection<ChessMove> allMovesIncludingInvalid(){
+        ArrayList<ChessMove> runningListOfMoves = new ArrayList<>();
+        ArrayList<ChessPosition> allPossibleChessPositions = new ArrayList<>();
+        for (int i=1; i<9; i++){
+            for (int j=1; j<9; j++){
+                ChessPosition position = new ChessPosition(i,j);
+                allPossibleChessPositions.add(position);
+            }
+        }
+        for (ChessPosition position:allPossibleChessPositions){
+            ChessPiece piece = board.squares[position.getRow()][position.getColumn()];
+            runningListOfMoves.addAll(piece.pieceMoves(board,position));
+        }
+        return runningListOfMoves;
+    }
+
+    /**
      * Gets all valid moves for a piece at the given location
      *
      * @param startPosition the piece to get valid moves for
@@ -48,7 +71,14 @@ public class ChessGame {
      * startPosition
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-        throw new RuntimeException("Not implemented");
+        ChessPiece piece = board.getPiece(startPosition);
+        Collection<ChessMove> moves = piece.pieceMoves(board, startPosition);
+        if (moves.isEmpty()){
+            return null;
+        }
+        else {
+            return moves;
+        }
     }
 
     /**
