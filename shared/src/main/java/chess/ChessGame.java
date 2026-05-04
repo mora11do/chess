@@ -12,8 +12,8 @@ import java.util.Collection;
 public class ChessGame {
     private ChessBoard board;
     private TeamColor teamTurn = TeamColor.WHITE;
-    private ChessPosition whiteKingSquare = new ChessPosition(1,5);
-    private ChessPosition blackKingSquare = new ChessPosition(8,5);
+    private ChessPosition whiteKingPosition = new ChessPosition(1,5);
+    private ChessPosition blackKingPosition = new ChessPosition(8,5);
 
     public ChessGame() {
 
@@ -43,12 +43,12 @@ public class ChessGame {
         BLACK
     }
 
+
     /**
-     * Calls pieceMoves on every square on the board to find every possible move, even if invalid. Helpful for iteration.
-     * @return A collection of every possible move.
+     * Gives every square inside the board as a chess position. Used for iteration.
+     * @return an ArrayList of all chess positions on the board (whether or not a piece is there).
      */
-    public Collection<ChessMove> allMovesIncludingInvalid(){
-        ArrayList<ChessMove> runningListOfMoves = new ArrayList<>();
+    public ArrayList<ChessPosition> allChessPositions(){
         ArrayList<ChessPosition> allPossibleChessPositions = new ArrayList<>();
         for (int i=1; i<9; i++){
             for (int j=1; j<9; j++){
@@ -56,9 +56,21 @@ public class ChessGame {
                 allPossibleChessPositions.add(position);
             }
         }
+        return allPossibleChessPositions;
+    }
+
+    /**
+     * Calls pieceMoves on every square on the board to find every possible move, even if invalid. Helpful for iteration.
+     * @return A collection of every possible move.
+     */
+    public Collection<ChessMove> allMovesIncludingInvalid(){
+        ArrayList<ChessMove> runningListOfMoves = new ArrayList<>();
+        ArrayList<ChessPosition> allPossibleChessPositions = this.allChessPositions();
         for (ChessPosition position:allPossibleChessPositions){
-            ChessPiece piece = board.squares[position.getRow()][position.getColumn()];
-            runningListOfMoves.addAll(piece.pieceMoves(board,position));
+            ChessPiece piece = board.getPiece(position);
+            if (piece != null) {
+                runningListOfMoves.addAll(piece.pieceMoves(board, position));
+            }
         }
         return runningListOfMoves;
     }
@@ -98,8 +110,44 @@ public class ChessGame {
      * @return True if the specified team is in check
      */
     public boolean isInCheck(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+        Collection<ChessMove> moves = allMovesIncludingInvalid();
+        updateKingPositions();
+        for (ChessMove move: moves){
+            ChessPosition endPosition = move.getEndPosition();
+            if (teamColor == TeamColor.WHITE) {
+                if (endPosition.getRow() == whiteKingPosition.getRow() && endPosition.getColumn() == whiteKingPosition.getColumn()){
+                    return true;
+                }
+            }
+            else{
+                if (endPosition.getRow() == blackKingPosition.getRow() && endPosition.getColumn() == blackKingPosition.getColumn()){
+                    return true;
+                }
+            }
+        }
+        return false;
     }
+
+    /**
+     * Update positions of kings
+     */
+    public void updateKingPositions() {
+        for (ChessPosition position: allChessPositions()){
+            ChessPiece piece = board.getPiece(position);
+            if (piece == null){
+                continue;
+            }
+            if (piece.getPieceType() == ChessPiece.PieceType.KING){
+                if (piece.getTeamColor() == TeamColor.WHITE){
+                    whiteKingPosition = new ChessPosition(position.getRow(), position.getColumn());
+                }
+                else{
+                    blackKingPosition = new ChessPosition(position.getRow(), position.getColumn());
+                }
+            }
+        }
+    }
+
 
     /**
      * Determines if the given team is in checkmate
