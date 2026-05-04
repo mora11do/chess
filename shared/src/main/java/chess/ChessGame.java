@@ -294,7 +294,9 @@ public class ChessGame {
             return false;
         }
         ChessGame chessGame = (ChessGame) o;
-        return Objects.equals(board, chessGame.board) && teamTurn == chessGame.teamTurn && Objects.equals(whiteKingPosition, chessGame.whiteKingPosition) && Objects.equals(blackKingPosition, chessGame.blackKingPosition);
+        return Objects.equals(board, chessGame.board) &&
+                teamTurn == chessGame.teamTurn && Objects.equals(whiteKingPosition, chessGame.whiteKingPosition) &&
+                Objects.equals(blackKingPosition, chessGame.blackKingPosition);
     }
 
     @Override

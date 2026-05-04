@@ -40,7 +40,8 @@ public class MovementCalculator {
     }
 
     /**
-     * I just saw this exact some chunk of code repeated everywhere so I made it a function. It will find the next position based off of relative coordiantes given
+     * I just saw this exact some chunk of code repeated everywhere so I made it a function.
+     * It will find the next position based off of relative coordiantes given
      * and then will see if that move is valid, and then add that move to moveList if it is.
      * @param direction Where you want to move to
      */
