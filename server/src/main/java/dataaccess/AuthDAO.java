@@ -1,11 +1,13 @@
 package dataaccess;
 
 import models.Authtoken;
+import models.User;
 
 public interface AuthDAO {
-    void createAuthToken(Authtoken authToken);
-    Authtoken getAuthToken(Authtoken authToken);
+    Authtoken createAuthToken(Authtoken authToken);
+    Authtoken createAuthToken(User user);
     Authtoken getAuthToken(String username);
     void deleteAuthToken(Authtoken authToken);
     void deleteAuthToken(String username);
+    void clear();
 }

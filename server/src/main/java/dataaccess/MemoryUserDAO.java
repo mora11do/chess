@@ -20,7 +20,17 @@ public class MemoryUserDAO implements UserDAO{
     }
 
     @Override
+    public User getUser(User user) {
+        return users.get(user.username());
+    }
+
+    @Override
     public void deleteUser(String username) {
         users.remove(username);
+    }
+
+    @Override
+    public void clear() {
+        users.clear();
     }
 }

@@ -1,3 +1,3 @@
 package models;
 
-public record Authtoken (Authtoken authToken, String username) {}
+public record Authtoken (String uuid, String username) {}

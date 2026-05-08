@@ -28,4 +28,9 @@ public class MemoryGameDAO implements GameDAO{
     public void updateGame(Game oldGame, Game newGame) {
         games.put(oldGame.gameName(), newGame);
     }
+
+    @Override
+    public void clear() {
+        games.clear();
+    }
 }
