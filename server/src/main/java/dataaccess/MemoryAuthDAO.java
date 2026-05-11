@@ -1,47 +1,48 @@
 package dataaccess;
 
-import models.Authtoken;
+import models.Auth;
 import models.User;
 
 import java.util.HashMap;
 import java.util.UUID;
 
 public class MemoryAuthDAO implements AuthDAO{
-    private final HashMap<String, String> authTokens = new HashMap<>();
+    private final HashMap<String, Auth> auths = new HashMap<>();
 
     public MemoryAuthDAO() {
     }
 
     @Override
-    public Authtoken createAuthToken(User user) {
-        Authtoken authToken = new Authtoken(user.username(), UUID.randomUUID().toString());
-        authTokens.put(user.username(), authToken.uuid());
-        return authToken;
+    public Auth getAuth(String username) {
+        return auths.get(username);
     }
 
     @Override
-    public Authtoken createAuthToken(Authtoken authToken) {
-        authTokens.put(authToken.username(), authToken.uuid());
-        return authToken;
+    public void deleteAuthAuthToken(Auth auth) {
+        auths.remove(auth.username());
     }
 
     @Override
-    public Authtoken getAuthToken(String username) {
-        return authTokens.get(username);
+    public void deleteAuthUsername(String username) {
+        auths.remove(username);
     }
 
     @Override
-    public void deleteAuthToken(Authtoken authToken) {
-        authTokens.remove(authToken.username());
+    public Auth createAuth(User user) {
+        Auth newAuth = new Auth(UUID.randomUUID().toString(), user.username());
+        auths.put(newAuth.username(), newAuth);
+        return newAuth;
     }
 
     @Override
-    public void deleteAuthToken(String username) {
-        authTokens.remove(username);
+    public Auth createAuth(String authToken, String username) {
+        Auth newAuth = new Auth(authToken, username);
+        auths.put(username, newAuth);
+        return newAuth;
     }
 
     @Override
     public void clear() {
-        authTokens.clear();
+        auths.clear();
     }
 }
