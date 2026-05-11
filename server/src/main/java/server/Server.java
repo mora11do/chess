@@ -4,11 +4,9 @@ import com.google.gson.Gson;
 import dataaccess.*;
 import io.javalin.*;
 import io.javalin.http.Context;
-import models.Auth;
-import models.LoginRequest;
-import models.RegisterRequest;
-import models.User;
+import models.*;
 import services.LoginService;
+import services.LogoutService;
 import services.RegisterService;
 
 import javax.xml.crypto.Data;
@@ -28,7 +26,7 @@ public class Server {
         javalin = Javalin.create(config -> config.staticFiles.add("web"))
         .post("/user", this::register)
                 .post("/session", this::login)
-//                .delete("/session", this::logout)
+                .delete("/session", this::logout)
 //                .get("/game", this::list)
 //                .post("/game", this::create)
 //                .put("/game", this::join)
@@ -75,6 +73,22 @@ public class Server {
             Auth newAuth = loginService.login(loginObject);
             ctx.status(200);
             ctx.result(new Gson().toJson(Map.of("username",newAuth.username(),"authToken",newAuth.authToken())));
+        }
+        catch (DataAccessException e) {
+            ctx.status(401);
+        }
+    }
+
+    private void logout(Context ctx) {
+        var body = new Gson().fromJson(ctx.body(), Map.class);
+        String authToken = ctx.header("authorization");
+
+        LogoutService logoutService = new LogoutService(auths);
+        LogoutRequest logoutObject = new LogoutRequest(authToken);
+        try{
+            logoutService.logout(logoutObject);
+            ctx.status(200);
+            ctx.result("{}");
         }
         catch (DataAccessException e) {
             ctx.status(401);
