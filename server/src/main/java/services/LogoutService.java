@@ -20,7 +20,7 @@ public class LogoutService extends GenericService{
             return;
         }
         else{
-            throw new DataAccessException("Auth token does not exist");
+            throw new DataAccessException("Error: Auth token does not exist", 401);
         }
     }
 }

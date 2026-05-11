@@ -21,11 +21,14 @@ public class RegisterService {
         String password = request.password();
         String email = request.email();
         if (userDAO.getUser(username) == null){
+            if (password == null){
+                throw new DataAccessException("Error: Please enter a password", 400);
+            }
             userDAO.createUser(username, password, email);
             return authDAO.createAuth(username);
         }
         else{
-            throw new DataAccessException("User with username already exists");
+            throw new DataAccessException("Error: User with username already exists", 403);
         }
     }
 }

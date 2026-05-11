@@ -31,7 +31,7 @@ public class ListService extends GenericService {
 
         }
         else{
-            throw new DataAccessException("Auth token does not exist");
+            throw new DataAccessException("Error: Auth token does not exist", 401);
         }
     }
 }

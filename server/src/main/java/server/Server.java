@@ -58,7 +58,8 @@ public class Server {
             ctx.result(new Gson().toJson(Map.of("username",newAuth.username(),"authToken",newAuth.authToken())));
         }
         catch (DataAccessException e) {
-            ctx.status(403);
+            ctx.status(e.getStatusCode());
+            ctx.result(new Gson().toJson(Map.of("message", e.getMessage())));
         }
     }
 
@@ -75,7 +76,8 @@ public class Server {
             ctx.result(new Gson().toJson(Map.of("username",newAuth.username(),"authToken",newAuth.authToken())));
         }
         catch (DataAccessException e) {
-            ctx.status(401);
+            ctx.status(e.getStatusCode());
+            ctx.result(new Gson().toJson(Map.of("message", e.getMessage())));
         }
     }
 
@@ -90,7 +92,8 @@ public class Server {
             ctx.result("{}");
         }
         catch (DataAccessException e) {
-            ctx.status(401);
+            ctx.status(e.getStatusCode());
+            ctx.result(new Gson().toJson(Map.of("message", e.getMessage())));
         }
     }
 
@@ -105,7 +108,8 @@ public class Server {
             ctx.result(new Gson().toJson(Map.of("games",listOfGames)));
         }
         catch (DataAccessException e) {
-            ctx.status(401);
+            ctx.status(e.getStatusCode());
+            ctx.result(new Gson().toJson(Map.of("message", e.getMessage())));
         }
     }
 
@@ -122,7 +126,8 @@ public class Server {
             ctx.result(new Gson().toJson(Map.of("gameID",gameID)));
         }
         catch (DataAccessException e) {
-            ctx.status(401);
+            ctx.status(e.getStatusCode());
+            ctx.result(new Gson().toJson(Map.of("message", e.getMessage())));
         }
     }
 
@@ -130,8 +135,17 @@ public class Server {
         var body = new Gson().fromJson(ctx.body(), Map.class);
         String authToken = ctx.header("authorization");
         String playerColor = (String) body.get("playerColor");
-        int gameID = ((Number) body.get("gameID")).intValue();
 
+        int gameID;
+        try {
+            int testGameID = ((Number) body.get("gameID")).intValue();
+            gameID = testGameID;
+        }
+        catch (NullPointerException e){
+            ctx.status(400);
+            ctx.result(new Gson().toJson(Map.of("message", "Error: Please enter a gameID")));
+            return;
+        }
         JoinService joinService = new JoinService(games, auths);
         JoinRequest joinObject = new JoinRequest(authToken, playerColor,gameID);
         try{
@@ -140,7 +154,8 @@ public class Server {
             ctx.result("{}");
         }
         catch (DataAccessException e) {
-            ctx.status(401);
+            ctx.status(e.getStatusCode());
+            ctx.result(new Gson().toJson(Map.of("message", e.getMessage())));
         }
     }
 
