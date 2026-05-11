@@ -10,8 +10,9 @@ public class MemoryUserDAO implements UserDAO{
     }
 
     @Override
-    public void createUser(User user) {
-        users.put(user.username(), user);
+    public void createUser(String username, String password, String email) {
+        User newUser = new User(username, password, email);
+        users.put(username, newUser);
     }
 
     @Override

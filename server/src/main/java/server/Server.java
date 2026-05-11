@@ -1,9 +1,14 @@
 package server;
 
 import com.google.gson.Gson;
+import dataaccess.*;
 import io.javalin.*;
 import io.javalin.http.Context;
+import models.Auth;
+import models.User;
+import services.RegisterService;
 
+import javax.xml.crypto.Data;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -13,8 +18,8 @@ import static io.javalin.apibuilder.ApiBuilder.post;
 public class Server {
 
     private final Javalin javalin;
-    private final HashMap<String, String> users = new HashMap<>();
-    private final HashMap<String, String> auths = new HashMap<>();
+    private final UserDAO users = new MemoryUserDAO();
+    private final AuthDAO auths = new MemoryAuthDAO();
 
     public Server() {
         javalin = Javalin.create(config -> config.staticFiles.add("web"))
@@ -39,19 +44,19 @@ public class Server {
     }
 
     private void register(Context ctx) {
-        var notSureYet = new Gson().fromJson(ctx.body(), Map.class);
-        String username = (String) notSureYet.get("username");
-        String password = (String) notSureYet.get("password");
-        String email = (String) notSureYet.get("email");
-        if (users.containsKey(username)){
-            ctx.status(403);
-        }
-        else{
-            users.put(username, password);
-            String authToken = UUID.randomUUID().toString();
-            auths.put(username, authToken);
+        var body = new Gson().fromJson(ctx.body(), Map.class);
+        String username = (String) body.get("username");
+        String password = (String) body.get("password");
+        String email = (String) body.get("email");
+
+        RegisterService registerService = new RegisterService(users, auths);
+        try{
+            Auth newAuth = registerService.register(username, password, email);
             ctx.status(200);
-            ctx.result(new Gson().toJson(Map.of("username",username,"authToken",authToken)));
+            ctx.result(new Gson().toJson(Map.of("username",newAuth.username(),"authToken",newAuth.authToken())));
+        }
+        catch (DataAccessException e) {
+            ctx.status(403);
         }
     }
 }

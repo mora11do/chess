@@ -1,13 +1,10 @@
 package services;
 
-import com.google.gson.Gson;
 import dataaccess.AuthDAO;
+import dataaccess.DataAccessException;
 import dataaccess.UserDAO;
-import models.Authtoken;
-import models.User;
+import models.Auth;
 
-import java.util.Map;
-import java.util.UUID;
 
 public class RegisterService {
     private final UserDAO userDAO;
@@ -18,13 +15,13 @@ public class RegisterService {
         this.authDAO = authDAO;
     }
 
-    Authtoken register(User user) {
-        if (userDAO.getUser(user) != null){
-            userDAO.createUser(user);
-            authDAO.createAuthToken(user);
+    public Auth register(String username, String password, String email) throws DataAccessException {
+        if (userDAO.getUser(username) == null){
+            userDAO.createUser(username, password, email);
+            return authDAO.createAuth(username);
         }
         else{
-            throw error
+            throw new DataAccessException("User with username already exists");
         }
     }
 }
