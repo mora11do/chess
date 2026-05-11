@@ -5,12 +5,10 @@ import dataaccess.*;
 import io.javalin.*;
 import io.javalin.http.Context;
 import models.*;
-import services.ListService;
-import services.LoginService;
-import services.LogoutService;
-import services.RegisterService;
+import services.*;
 
 import javax.xml.crypto.Data;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -30,7 +28,7 @@ public class Server {
                 .post("/session", this::login)
                 .delete("/session", this::logout)
                 .get("/game", this::list)
-//                .post("/game", this::create)
+                .post("/game", this::create)
 //                .put("/game", this::join)
 //                .delete("/db", this::clear)
                 ;
@@ -104,7 +102,24 @@ public class Server {
         try{
             var listOfGames = listService.list(listObject);
             ctx.status(200);
-            ctx.result(new Gson().toJson(Map.of("games",listOfGames.values())));
+            ctx.result(new Gson().toJson(Map.of("games",listOfGames)));
+        }
+        catch (DataAccessException e) {
+            ctx.status(401);
+        }
+    }
+
+    private void create(Context ctx) {
+        var body = new Gson().fromJson(ctx.body(), Map.class);
+        String authToken = ctx.header("authorization");
+        String gameName = (String) body.get("gameName");
+
+        CreateService createService = new CreateService(games, auths);
+        CreateRequest createObject = new CreateRequest(authToken, gameName);
+        try{
+            String gameID = createService.create(createObject);
+            ctx.status(200);
+            ctx.result(new Gson().toJson(Map.of("gameID",gameID)));
         }
         catch (DataAccessException e) {
             ctx.status(401);

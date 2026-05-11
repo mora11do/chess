@@ -6,6 +6,7 @@ import dataaccess.GameDAO;
 import dataaccess.UserDAO;
 import models.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 
@@ -18,10 +19,16 @@ public class ListService extends GenericService {
 
     }
 
-    public HashMap<String, Game> list(ListRequest request) throws DataAccessException {
+    public ArrayList<GameWithNoChessGame> list(ListRequest request) throws DataAccessException {
         String authToken = request.authToken();
         if (authIsReal(authToken)){
-            return gameDAO.getAllGames();
+            var listOfAllGamesIncludingChessGames = gameDAO.getAllGames().values();
+            ArrayList<GameWithNoChessGame> gamesWithNoChessGames = new ArrayList<>();
+            for (var game: listOfAllGamesIncludingChessGames)  {
+                gamesWithNoChessGames.add(new GameWithNoChessGame(game.gameID(), game.whiteUsername(), game.blackUsername(), game.gameName()));
+            }
+            return gamesWithNoChessGames;
+
         }
         else{
             throw new DataAccessException("Auth token does not exist");

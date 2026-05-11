@@ -1,17 +1,22 @@
 package dataaccess;
 
+import chess.ChessGame;
 import models.Game;
 import java.util.HashMap;
 
 public class MemoryGameDAO implements GameDAO{
     private final HashMap<String, Game> games = new HashMap<>();
+    private int counter = 0;
 
     public MemoryGameDAO() {
     }
 
     @Override
-    public void createGame(Game game) {
-        games.put(game.gameName(), game);
+    public String createGame(String gameName) {
+        counter++;
+        Game newGame = new Game(counter,null,null,gameName,new ChessGame());
+        games.put(gameName, newGame);
+        return gameName;
     }
 
     @Override
