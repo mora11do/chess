@@ -30,7 +30,7 @@ public class Server {
                 .get("/game", this::list)
                 .post("/game", this::create)
                 .put("/game", this::join)
-//                .delete("/db", this::clear)
+                .delete("/db", this::clear)
                 ;
 
     }
@@ -145,5 +145,11 @@ public class Server {
     }
 
 
+    private void clear(Context ctx) {
 
+        ClearService clearService = new ClearService(games, auths, users);
+        clearService.clear();
+        ctx.status(200);
+        ctx.result("{}");
+    }
 }
