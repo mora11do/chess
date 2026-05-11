@@ -29,7 +29,7 @@ public class Server {
                 .delete("/session", this::logout)
                 .get("/game", this::list)
                 .post("/game", this::create)
-//                .put("/game", this::join)
+                .put("/game", this::join)
 //                .delete("/db", this::clear)
                 ;
 
@@ -117,7 +117,7 @@ public class Server {
         CreateService createService = new CreateService(games, auths);
         CreateRequest createObject = new CreateRequest(authToken, gameName);
         try{
-            String gameID = createService.create(createObject);
+            int gameID = createService.create(createObject);
             ctx.status(200);
             ctx.result(new Gson().toJson(Map.of("gameID",gameID)));
         }
@@ -125,4 +125,25 @@ public class Server {
             ctx.status(401);
         }
     }
+
+    private void join(Context ctx) {
+        var body = new Gson().fromJson(ctx.body(), Map.class);
+        String authToken = ctx.header("authorization");
+        String playerColor = (String) body.get("playerColor");
+        int gameID = ((Number) body.get("gameID")).intValue();
+
+        JoinService joinService = new JoinService(games, auths);
+        JoinRequest joinObject = new JoinRequest(authToken, playerColor,gameID);
+        try{
+            joinService.join(joinObject);
+            ctx.status(200);
+            ctx.result("{}");
+        }
+        catch (DataAccessException e) {
+            ctx.status(401);
+        }
+    }
+
+
+
 }

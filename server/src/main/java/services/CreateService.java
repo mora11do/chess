@@ -18,7 +18,7 @@ public class CreateService extends GenericService {
 
     }
 
-    public String create(CreateRequest request) throws DataAccessException {
+    public int create(CreateRequest request) throws DataAccessException {
         String authToken = request.authToken();
         String gameName = request.gameName();
         if (authIsReal(authToken)){
