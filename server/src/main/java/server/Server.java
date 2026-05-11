@@ -5,6 +5,7 @@ import dataaccess.*;
 import io.javalin.*;
 import io.javalin.http.Context;
 import models.*;
+import services.ListService;
 import services.LoginService;
 import services.LogoutService;
 import services.RegisterService;
@@ -21,13 +22,14 @@ public class Server {
     private final Javalin javalin;
     private final UserDAO users = new MemoryUserDAO();
     private final AuthDAO auths = new MemoryAuthDAO();
+    private final GameDAO games = new MemoryGameDAO();
 
     public Server() {
         javalin = Javalin.create(config -> config.staticFiles.add("web"))
         .post("/user", this::register)
                 .post("/session", this::login)
                 .delete("/session", this::logout)
-//                .get("/game", this::list)
+                .get("/game", this::list)
 //                .post("/game", this::create)
 //                .put("/game", this::join)
 //                .delete("/db", this::clear)
@@ -80,7 +82,6 @@ public class Server {
     }
 
     private void logout(Context ctx) {
-        var body = new Gson().fromJson(ctx.body(), Map.class);
         String authToken = ctx.header("authorization");
 
         LogoutService logoutService = new LogoutService(auths);
@@ -89,6 +90,21 @@ public class Server {
             logoutService.logout(logoutObject);
             ctx.status(200);
             ctx.result("{}");
+        }
+        catch (DataAccessException e) {
+            ctx.status(401);
+        }
+    }
+
+    private void list(Context ctx) {
+        String authToken = ctx.header("authorization");
+
+        ListService listService = new ListService(games, auths);
+        ListRequest listObject = new ListRequest(authToken);
+        try{
+            var listOfGames = listService.list(listObject);
+            ctx.status(200);
+            ctx.result(new Gson().toJson(Map.of("games",listOfGames.values())));
         }
         catch (DataAccessException e) {
             ctx.status(401);

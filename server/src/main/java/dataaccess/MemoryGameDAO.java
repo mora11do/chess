@@ -20,6 +20,11 @@ public class MemoryGameDAO implements GameDAO{
     }
 
     @Override
+    public HashMap<String, Game> getAllGames() {
+        return games;
+    }
+
+    @Override
     public void deleteGame(String gameName) {
         games.remove(gameName);
     }

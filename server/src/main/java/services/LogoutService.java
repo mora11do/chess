@@ -7,19 +7,17 @@ import models.LogoutRequest;
 import models.User;
 
 
-public class LogoutService {
-    private final AuthDAO authDAO;
+public class LogoutService extends GenericService{
 
     public LogoutService(AuthDAO authDAO) {
-        this.authDAO = authDAO;
+        super(authDAO);
     }
 
-    public Auth logout(LogoutRequest request) throws DataAccessException {
+    public void logout(LogoutRequest request) throws DataAccessException {
         String authToken = request.authToken();
-        Auth existingAuth = authDAO.getAuth(authToken);
-        if (existingAuth != null){
+        if (authIsReal(authToken)) {
             authDAO.deleteAuth(authToken);
-            return existingAuth;
+            return;
         }
         else{
             throw new DataAccessException("Auth token does not exist");
