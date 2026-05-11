@@ -22,7 +22,12 @@ public class CreateService extends GenericService {
         String authToken = request.authToken();
         String gameName = request.gameName();
         if (authIsReal(authToken)){
-            return gameDAO.createGame(gameName);
+            if (gameDAO.getGame(gameName) == null) {
+                return gameDAO.createGame(gameName);
+            }
+            else{
+                throw new DataAccessException("Game name is already taken");
+            }
         }
         else{
             throw new DataAccessException("Auth token does not exist");
