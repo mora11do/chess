@@ -5,7 +5,10 @@ import dataaccess.*;
 import io.javalin.*;
 import io.javalin.http.Context;
 import models.Auth;
+import models.LoginRequest;
+import models.RegisterRequest;
 import models.User;
+import services.LoginService;
 import services.RegisterService;
 
 import javax.xml.crypto.Data;
@@ -24,7 +27,7 @@ public class Server {
     public Server() {
         javalin = Javalin.create(config -> config.staticFiles.add("web"))
         .post("/user", this::register)
-//                .post("/session", this::login)
+                .post("/session", this::login)
 //                .delete("/session", this::logout)
 //                .get("/game", this::list)
 //                .post("/game", this::create)
@@ -50,13 +53,31 @@ public class Server {
         String email = (String) body.get("email");
 
         RegisterService registerService = new RegisterService(users, auths);
+        RegisterRequest registerObject = new RegisterRequest(username, password, email);
         try{
-            Auth newAuth = registerService.register(username, password, email);
+            Auth newAuth = registerService.register(registerObject);
             ctx.status(200);
             ctx.result(new Gson().toJson(Map.of("username",newAuth.username(),"authToken",newAuth.authToken())));
         }
         catch (DataAccessException e) {
             ctx.status(403);
+        }
+    }
+
+    private void login(Context ctx) {
+        var body = new Gson().fromJson(ctx.body(), Map.class);
+        String username = (String) body.get("username");
+        String password = (String) body.get("password");
+
+        LoginService loginService = new LoginService(users, auths);
+        LoginRequest loginObject = new LoginRequest(username, password);
+        try{
+            Auth newAuth = loginService.login(loginObject);
+            ctx.status(200);
+            ctx.result(new Gson().toJson(Map.of("username",newAuth.username(),"authToken",newAuth.authToken())));
+        }
+        catch (DataAccessException e) {
+            ctx.status(401);
         }
     }
 }

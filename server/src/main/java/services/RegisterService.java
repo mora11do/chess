@@ -4,6 +4,7 @@ import dataaccess.AuthDAO;
 import dataaccess.DataAccessException;
 import dataaccess.UserDAO;
 import models.Auth;
+import models.RegisterRequest;
 
 
 public class RegisterService {
@@ -15,7 +16,10 @@ public class RegisterService {
         this.authDAO = authDAO;
     }
 
-    public Auth register(String username, String password, String email) throws DataAccessException {
+    public Auth register(RegisterRequest request) throws DataAccessException {
+        String username = request.username();
+        String password = request.password();
+        String email = request.email();
         if (userDAO.getUser(username) == null){
             userDAO.createUser(username, password, email);
             return authDAO.createAuth(username);
