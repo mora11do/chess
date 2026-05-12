@@ -9,7 +9,6 @@ public interface GameDAO {
     Game getGame(String gameName);
     Game getGame(int gameID);
     HashMap<String, Game> getAllGames();
-    void deleteGame(String gameName);
     void updateGame(Game oldGame, Game newGame);
     void clear();
 }

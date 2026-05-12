@@ -37,13 +37,6 @@ public class MemoryGameDAO implements GameDAO{
     }
 
     @Override
-    public void deleteGame(String gameName) {
-        int gameID = gamesAccessByName.get(gameName).gameID();
-        gamesAccessByName.remove(gameName);
-        gamesAccessByID.remove(gameID);
-    }
-
-    @Override
     public void updateGame(Game oldGame, Game newGame) {
         gamesAccessByName.put(oldGame.gameName(), newGame);
         gamesAccessByID.put(oldGame.gameID(), newGame);
