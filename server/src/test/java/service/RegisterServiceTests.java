@@ -12,20 +12,20 @@ import services.RegisterService;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class RegisterServiceTests {
-    static final MemoryUserDAO userDAO = new MemoryUserDAO();
-    static final MemoryAuthDAO authDAO = new MemoryAuthDAO();
-    static final RegisterService service = new RegisterService(userDAO, authDAO);
+    static final MemoryUserDAO USER_DAO = new MemoryUserDAO();
+    static final MemoryAuthDAO AUTH_DAO = new MemoryAuthDAO();
+    static final RegisterService SERVICE = new RegisterService(USER_DAO, AUTH_DAO);
 
 
     @BeforeEach
     void clear(){
-        userDAO.clear();
-        authDAO.clear();
+        USER_DAO.clear();
+        AUTH_DAO.clear();
     }
 
     @Test
     public void registerSuccess() throws DataAccessException {
-        Auth auth = service.register(new RegisterRequest("bob", "password", "email"));
+        Auth auth = SERVICE.register(new RegisterRequest("bob", "password", "email"));
         assertEquals("bob", auth.username());
         assertNotNull(auth.authToken());
     }
@@ -33,8 +33,8 @@ public class RegisterServiceTests {
     @Test
     void registerDuplicateUser() {
         assertThrows(DataAccessException.class, () -> {
-            service.register(new RegisterRequest("bob", "password", "bob@gmail.com"));
-            service.register(new RegisterRequest("bob", "password", "bob@gmail.com"));
+            SERVICE.register(new RegisterRequest("bob", "password", "bob@gmail.com"));
+            SERVICE.register(new RegisterRequest("bob", "password", "bob@gmail.com"));
         });
     }
 }
