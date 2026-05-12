@@ -16,27 +16,27 @@ import services.RegisterService;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ClearServiceTests {
-    static final MemoryUserDAO userDAO = new MemoryUserDAO();
-    static final MemoryAuthDAO authDAO = new MemoryAuthDAO();
-    static final MemoryGameDAO gameDAO = new MemoryGameDAO();
-    static final RegisterService rService = new RegisterService(userDAO, authDAO);
-    static final ClearService cService = new ClearService(gameDAO, authDAO,userDAO);
-    static final LoginService lService = new LoginService(userDAO, authDAO);
+    static final MemoryUserDAO USER_DAO = new MemoryUserDAO();
+    static final MemoryAuthDAO AUTH_DAO = new MemoryAuthDAO();
+    static final MemoryGameDAO GAME_DAO = new MemoryGameDAO();
+    static final RegisterService R_SERVICE = new RegisterService(USER_DAO, AUTH_DAO);
+    static final ClearService C_SERVICE = new ClearService(GAME_DAO, AUTH_DAO,USER_DAO);
+    static final LoginService L_SERVICE = new LoginService(USER_DAO, AUTH_DAO);
 
 
 
     @BeforeEach
     void clear(){
-        userDAO.clear();
-        authDAO.clear();
-        gameDAO.clear();
+        USER_DAO.clear();
+        AUTH_DAO.clear();
+        GAME_DAO.clear();
     }
 
     @Test
     public void clearSuccess() throws DataAccessException {
-        Auth auth = rService.register(new RegisterRequest("username", "password","email"));
-        cService.clear();
+        Auth auth = R_SERVICE.register(new RegisterRequest("username", "password","email"));
+        C_SERVICE.clear();
         assertThrows(DataAccessException.class, () ->
-                lService.login(new LoginRequest("username", "password")));
+                L_SERVICE.login(new LoginRequest("username", "password")));
     }
 }

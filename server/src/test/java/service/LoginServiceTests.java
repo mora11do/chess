@@ -14,29 +14,29 @@ import services.RegisterService;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class LoginServiceTests {
-    static final MemoryUserDAO userDAO = new MemoryUserDAO();
-    static final MemoryAuthDAO authDAO = new MemoryAuthDAO();
-    static final RegisterService rService = new RegisterService(userDAO, authDAO);
-    static final LoginService lService = new LoginService(userDAO, authDAO);
+    static final MemoryUserDAO USER_DAO = new MemoryUserDAO();
+    static final MemoryAuthDAO AUTH_DAO = new MemoryAuthDAO();
+    static final RegisterService R_SERVICE = new RegisterService(USER_DAO, AUTH_DAO);
+    static final LoginService L_SERVICE = new LoginService(USER_DAO, AUTH_DAO);
 
 
     @BeforeEach
     void clear(){
-        userDAO.clear();
-        authDAO.clear();
+        USER_DAO.clear();
+        AUTH_DAO.clear();
     }
 
     @Test
     public void loginSuccess() throws DataAccessException {
-        Auth auth = rService.register(new RegisterRequest("username", "password", "email"));
+        Auth auth = R_SERVICE.register(new RegisterRequest("username", "password", "email"));
         assertDoesNotThrow(() ->
-                lService.login(new LoginRequest("username", "password")));
+                L_SERVICE.login(new LoginRequest("username", "password")));
     }
 
     @Test
     void loginFail() {
         assertThrows(DataAccessException.class, () -> {
-            lService.login(new LoginRequest("wrongUsername", "wrongPassword"));
+            L_SERVICE.login(new LoginRequest("wrongUsername", "wrongPassword"));
         });
     }
 }

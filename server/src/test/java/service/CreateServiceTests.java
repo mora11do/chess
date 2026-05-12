@@ -12,32 +12,32 @@ import services.CreateService;
 import services.RegisterService;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static service.RegisterServiceTests.userDAO;
+import static service.RegisterServiceTests.USER_DAO;
 
 public class CreateServiceTests {
-    static final MemoryGameDAO gameDAO = new MemoryGameDAO();
-    static final MemoryAuthDAO authDAO = new MemoryAuthDAO();
-    static final CreateService cService = new CreateService(gameDAO, authDAO);
-    static final RegisterService rService = new RegisterService(userDAO, authDAO);
+    static final MemoryGameDAO GAME_DAO = new MemoryGameDAO();
+    static final MemoryAuthDAO AUTH_DAO = new MemoryAuthDAO();
+    static final CreateService C_SERVICE = new CreateService(GAME_DAO, AUTH_DAO);
+    static final RegisterService R_SERVICE = new RegisterService(USER_DAO, AUTH_DAO);
 
 
     @BeforeEach
     void clear(){
-        gameDAO.clear();
-        authDAO.clear();
-        userDAO.clear();
+        GAME_DAO.clear();
+        AUTH_DAO.clear();
+        USER_DAO.clear();
     }
 
     @Test
     public void createSuccess() throws DataAccessException {
-        Auth auth = rService.register(new RegisterRequest("username", "password", "email"));
-        int gameID = cService.create(new CreateRequest(auth.authToken(), "game"));
+        Auth auth = R_SERVICE.register(new RegisterRequest("username", "password", "email"));
+        int gameID = C_SERVICE.create(new CreateRequest(auth.authToken(), "game"));
         assertNotNull(gameID);
     }
 
     @Test
     public void createUnauthorized() {
         assertThrows(DataAccessException.class, () ->
-                cService.create(new CreateRequest("fakeToken", "game")));
+                C_SERVICE.create(new CreateRequest("fakeToken", "game")));
     }
 }

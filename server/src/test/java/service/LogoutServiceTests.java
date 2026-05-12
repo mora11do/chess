@@ -3,37 +3,37 @@ package service;
 import dataaccess.DataAccessException;
 import dataaccess.MemoryAuthDAO;
 import dataaccess.MemoryGameDAO;
+import dataaccess.MemoryUserDAO;
 import models.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import services.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static service.RegisterServiceTests.userDAO;
 
 public class LogoutServiceTests {
-    static final MemoryGameDAO gameDAO = new MemoryGameDAO();
-    static final MemoryAuthDAO authDAO = new MemoryAuthDAO();
-    static final RegisterService rService = new RegisterService(userDAO, authDAO);
-    static final LogoutService lService = new LogoutService(authDAO);
+    static final MemoryUserDAO USER_DAO = new MemoryUserDAO();
+    static final MemoryAuthDAO AUTH_DAO = new MemoryAuthDAO();
+    static final RegisterService R_SERVICE = new RegisterService(USER_DAO, AUTH_DAO);
+    static final LogoutService L_SERVICE = new LogoutService(AUTH_DAO);
 
 
     @BeforeEach
     void clear() {
-        authDAO.clear();
-        userDAO.clear();
+        AUTH_DAO.clear();
+        USER_DAO.clear();
     }
 
     @Test
     public void logoutSuccess() throws DataAccessException {
-        Auth auth = rService.register(new RegisterRequest("username", "password", "email"));
+        Auth auth = R_SERVICE.register(new RegisterRequest("username", "password", "email"));
         assertDoesNotThrow(() ->
-                lService.logout(new LogoutRequest(auth.authToken())));
+                L_SERVICE.logout(new LogoutRequest(auth.authToken())));
     }
 
     @Test
     public void logoutUnauthorized() {
         assertThrows(DataAccessException.class, () ->
-                lService.logout(new LogoutRequest("fakeToken")));
+                L_SERVICE.logout(new LogoutRequest("fakeToken")));
     }
 }
