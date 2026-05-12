@@ -1,13 +1,11 @@
 package server;
 
-import com.google.gson.Gson;
 import dataaccess.*;
+import handlers.*;
 import io.javalin.*;
-import io.javalin.http.Context;
 import models.*;
 import services.*;
 
-import java.util.Map;
 
 
 public class Server {
@@ -16,16 +14,23 @@ public class Server {
     private final UserDAO users = new MemoryUserDAO();
     private final AuthDAO auths = new MemoryAuthDAO();
     private final GameDAO games = new MemoryGameDAO();
+    private final RegisterHandler registerHandler = new RegisterHandler(new RegisterService(users, auths));
+    private final LoginHandler loginHandler = new LoginHandler(new LoginService(users, auths));
+    private final LogoutHandler logoutHandler = new LogoutHandler(new LogoutService(auths));
+    private final ListHandler listHandler = new ListHandler(new ListService(games, auths));
+    private final CreateHandler createHandler = new CreateHandler(new CreateService(games, auths));
+    private final JoinHandler joinHandler = new JoinHandler(new JoinService(games, auths));
+    private final ClearHandler clearHandler = new ClearHandler(new ClearService(games, auths, users));
 
     public Server() {
         javalin = Javalin.create(config -> config.staticFiles.add("web"))
-        .post("/user", this::register)
-                .post("/session", this::login)
-                .delete("/session", this::logout)
-                .get("/game", this::list)
-                .post("/game", this::create)
-                .put("/game", this::join)
-                .delete("/db", this::clear)
+        .post("/user", registerHandler::register)
+                .post("/session", loginHandler::login)
+                .delete("/session", logoutHandler::logout)
+                .get("/game", listHandler::list)
+                .post("/game", createHandler::create)
+                .put("/game", joinHandler::join)
+                .delete("/db", clearHandler::clear)
                 ;
 
     }
@@ -39,127 +44,4 @@ public class Server {
         javalin.stop();
     }
 
-    private void register(Context ctx) {
-        var body = new Gson().fromJson(ctx.body(), Map.class);
-        String username = (String) body.get("username");
-        String password = (String) body.get("password");
-        String email = (String) body.get("email");
-
-        RegisterService registerService = new RegisterService(users, auths);
-        RegisterRequest registerObject = new RegisterRequest(username, password, email);
-        try{
-            Auth newAuth = registerService.register(registerObject);
-            ctx.status(200);
-            ctx.result(new Gson().toJson(Map.of("username",newAuth.username(),"authToken",newAuth.authToken())));
-        }
-        catch (DataAccessException e) {
-            ctx.status(e.getStatusCode());
-            ctx.result(new Gson().toJson(Map.of("message", e.getMessage())));
-        }
-    }
-
-    private void login(Context ctx) {
-        var body = new Gson().fromJson(ctx.body(), Map.class);
-        String username = (String) body.get("username");
-        String password = (String) body.get("password");
-
-        LoginService loginService = new LoginService(users, auths);
-        LoginRequest loginObject = new LoginRequest(username, password);
-        try{
-            Auth newAuth = loginService.login(loginObject);
-            ctx.status(200);
-            ctx.result(new Gson().toJson(Map.of("username",newAuth.username(),"authToken",newAuth.authToken())));
-        }
-        catch (DataAccessException e) {
-            ctx.status(e.getStatusCode());
-            ctx.result(new Gson().toJson(Map.of("message", e.getMessage())));
-        }
-    }
-
-    private void logout(Context ctx) {
-        String authToken = ctx.header("authorization");
-
-        LogoutService logoutService = new LogoutService(auths);
-        LogoutRequest logoutObject = new LogoutRequest(authToken);
-        try{
-            logoutService.logout(logoutObject);
-            ctx.status(200);
-            ctx.result("{}");
-        }
-        catch (DataAccessException e) {
-            ctx.status(e.getStatusCode());
-            ctx.result(new Gson().toJson(Map.of("message", e.getMessage())));
-        }
-    }
-
-    private void list(Context ctx) {
-        String authToken = ctx.header("authorization");
-
-        ListService listService = new ListService(games, auths);
-        ListRequest listObject = new ListRequest(authToken);
-        try{
-            var listOfGames = listService.list(listObject);
-            ctx.status(200);
-            ctx.result(new Gson().toJson(Map.of("games",listOfGames)));
-        }
-        catch (DataAccessException e) {
-            ctx.status(e.getStatusCode());
-            ctx.result(new Gson().toJson(Map.of("message", e.getMessage())));
-        }
-    }
-
-    private void create(Context ctx) {
-        var body = new Gson().fromJson(ctx.body(), Map.class);
-        String authToken = ctx.header("authorization");
-        String gameName = (String) body.get("gameName");
-
-        CreateService createService = new CreateService(games, auths);
-        CreateRequest createObject = new CreateRequest(authToken, gameName);
-        try{
-            int gameID = createService.create(createObject);
-            ctx.status(200);
-            ctx.result(new Gson().toJson(Map.of("gameID",gameID)));
-        }
-        catch (DataAccessException e) {
-            ctx.status(e.getStatusCode());
-            ctx.result(new Gson().toJson(Map.of("message", e.getMessage())));
-        }
-    }
-
-    private void join(Context ctx) {
-        var body = new Gson().fromJson(ctx.body(), Map.class);
-        String authToken = ctx.header("authorization");
-        String playerColor = (String) body.get("playerColor");
-
-        int gameID;
-        try {
-            int testGameID = ((Number) body.get("gameID")).intValue();
-            gameID = testGameID;
-        }
-        catch (NullPointerException e){
-            ctx.status(400);
-            ctx.result(new Gson().toJson(Map.of("message", "Error: Please enter a gameID")));
-            return;
-        }
-        JoinService joinService = new JoinService(games, auths);
-        JoinRequest joinObject = new JoinRequest(authToken, playerColor,gameID);
-        try{
-            joinService.join(joinObject);
-            ctx.status(200);
-            ctx.result("{}");
-        }
-        catch (DataAccessException e) {
-            ctx.status(e.getStatusCode());
-            ctx.result(new Gson().toJson(Map.of("message", e.getMessage())));
-        }
-    }
-
-
-    private void clear(Context ctx) {
-
-        ClearService clearService = new ClearService(games, auths, users);
-        clearService.clear();
-        ctx.status(200);
-        ctx.result("{}");
-    }
 }
