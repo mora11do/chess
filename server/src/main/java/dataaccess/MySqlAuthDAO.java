@@ -58,8 +58,15 @@ public class MySqlAuthDAO extends GenericSqlDAO implements AuthDAO {
     @Override
     public Auth getAuth(String authToken) {
         try (Connection conn = DatabaseManager.getConnection()) {
-            var statement = "SELECT authToken, username, email FROM users WHERE authToken=?";
-            executeUpdate(statement, authToken);
+            var statement = "SELECT authToken, username FROM users WHERE authToken=?";
+            try (PreparedStatement ps = conn.prepareStatement(statement)) {
+                ps.setString(1, authToken);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return readAuth(rs);
+                    }
+                }
+            }
         } catch (Exception e) {
             throw new DataAccessSQLException("Error: getUser SQL failed", 500);
         }
