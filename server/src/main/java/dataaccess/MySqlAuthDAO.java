@@ -2,13 +2,10 @@ package dataaccess;
 
 import models.Auth;
 import models.User;
-import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.*;
 import java.util.UUID;
 
-import static java.sql.Statement.RETURN_GENERATED_KEYS;
-import static java.sql.Types.NULL;
 
 
 public class MySqlAuthDAO extends GenericSqlDAO implements AuthDAO {
@@ -56,6 +53,17 @@ public class MySqlAuthDAO extends GenericSqlDAO implements AuthDAO {
     }
 
     @Override
+    public void deleteAuth(String authToken) throws DataAccessSQLException{
+        var statement = "DELETE FROM auths WHERE authToken=?";
+        try {
+            executeUpdate(statement, authToken);
+        }
+        catch (DataAccessException e){
+            throw new DataAccessSQLException("Error: deleteAuth broke", 500);
+        }
+    }
+
+    @Override
     public Auth getAuth(String authToken) {
         try (Connection conn = DatabaseManager.getConnection()) {
             var statement = "SELECT authToken, username FROM users WHERE authToken=?";
@@ -73,53 +81,12 @@ public class MySqlAuthDAO extends GenericSqlDAO implements AuthDAO {
         return null;
     }
 
-    @Override
-    public User getUser(String username) throws DataAccessSQLException {
-        try (Connection conn = DatabaseManager.getConnection()) {
-            var statement = "SELECT username, hashedPassword, email FROM users WHERE username=?";
-            try (PreparedStatement ps = conn.prepareStatement(statement)) {
-                ps.setString(1, username);
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
-                        return readUser(rs);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            throw new DataAccessSQLException("Error: getUser SQL failed", 500);
-        }
-        return null;
-    }
-
-
-    @Override
-    public User getUser(User user) throws DataAccessSQLException {
-        try (Connection conn = DatabaseManager.getConnection()) {
-            var statement = "SELECT authToken, username FROM users WHERE username=?";
-            try (PreparedStatement ps = conn.prepareStatement(statement)) {
-                ps.setString(1, user.username());
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
-                        return readAuth(rs);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            throw new DataAccessSQLException("Error: getUser SQL failed", 500);
-        }
-        return null;
-    }
 
     @Override
     public void clear() throws DataAccessSQLException{
-        var statement = "TRUNCATE users";
-        try {
-            executeUpdate(statement);
-        }
-        catch (DataAccessException e){
-            throw new DataAccessSQLException("Error: clear failed, awkward",500);
-        }
+        clearGeneric("auths");
     }
+
 
     private Auth readAuth(ResultSet rs) throws SQLException{
         var authToken = rs.getString("authToken");
