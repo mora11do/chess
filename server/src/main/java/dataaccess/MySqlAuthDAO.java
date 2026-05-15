@@ -19,11 +19,11 @@ public class MySqlAuthDAO extends GenericSqlDAO implements AuthDAO {
 
     @Override
     public Auth createAuth(String username) {
-        var statement = "INSERT INTO auths (username, hashedPassword, email) VALUES (?, ?, ?)";
-
-        String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+        var statement = "INSERT INTO auths (authToken, username) VALUES (?, ?)";
         try {
-            executeUpdate(statement, username, hashedPassword, email);
+            Auth returnAuth = new Auth(UUID.randomUUID().toString(), username);
+            executeUpdate(statement, returnAuth.authToken(), username);
+            return returnAuth;
         }
         catch (Exception e){
             throw new DataAccessSQLException("Error: createUser broke", 500);
