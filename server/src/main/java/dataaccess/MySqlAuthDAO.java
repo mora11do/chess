@@ -56,16 +56,14 @@ public class MySqlAuthDAO extends GenericSqlDAO implements AuthDAO {
     }
 
     @Override
-    public void createUser(String username, String password, String email) throws DataAccessSQLException {
-        var statement = "INSERT INTO users (username, hashedPassword, email) VALUES (?, ?, ?)";
-
-        String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
-        try {
-            executeUpdate(statement, username, hashedPassword, email);
+    public Auth getAuth(String authToken) {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            var statement = "SELECT authToken, username, email FROM users WHERE authToken=?";
+            executeUpdate(statement, authToken);
+        } catch (Exception e) {
+            throw new DataAccessSQLException("Error: getUser SQL failed", 500);
         }
-        catch (Exception e){
-            throw new DataAccessSQLException("Error: createUser broke", 500);
-        }
+        return null;
     }
 
     @Override
@@ -90,12 +88,12 @@ public class MySqlAuthDAO extends GenericSqlDAO implements AuthDAO {
     @Override
     public User getUser(User user) throws DataAccessSQLException {
         try (Connection conn = DatabaseManager.getConnection()) {
-            var statement = "SELECT username, hashedPassword, email FROM users WHERE username=?";
+            var statement = "SELECT authToken, username FROM users WHERE username=?";
             try (PreparedStatement ps = conn.prepareStatement(statement)) {
                 ps.setString(1, user.username());
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
-                        return readUser(rs);
+                        return readAuth(rs);
                     }
                 }
             }
