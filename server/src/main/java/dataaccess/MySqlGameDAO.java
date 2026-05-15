@@ -124,7 +124,6 @@ public class MySqlGameDAO extends GenericSqlDAO implements GameDAO{
         )
         """
         };
-    };
-
+    }
 
 }
