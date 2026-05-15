@@ -18,6 +18,31 @@ public class MySqlAuthDAO extends GenericSqlDAO implements AuthDAO {
     }
 
     @Override
+    public Auth createAuth(User user) {
+        var statement = "INSERT INTO auths (authToken, username) VALUES (?, ?)";
+        try {
+            Auth returnAuth = new Auth(UUID.randomUUID().toString(), user.username());
+            executeUpdate(statement, returnAuth.authToken(), user.username());
+            return returnAuth;
+        }
+        catch (Exception e){
+            throw new DataAccessSQLException("Error: createUser broke", 500);
+        }
+    }
+
+    @Override
+    public Auth createAuth(String authToken, String username) {
+        var statement = "INSERT INTO auths (authToken, username) VALUES (?, ?)";
+        try {
+            executeUpdate(statement, authToken, username);
+            return new Auth(authToken, username);
+        }
+        catch (Exception e){
+            throw new DataAccessSQLException("Error: createUser broke", 500);
+        }
+    }
+
+    @Override
     public Auth createAuth(String username) {
         var statement = "INSERT INTO auths (authToken, username) VALUES (?, ?)";
         try {
