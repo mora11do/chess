@@ -1,21 +1,18 @@
 package dataaccess;
 
-import com.google.gson.Gson;
 import models.User;
 import org.mindrot.jbcrypt.BCrypt;
 
-import javax.xml.crypto.Data;
 import java.sql.*;
-import java.util.HashMap;
 
 import static java.sql.Statement.RETURN_GENERATED_KEYS;
 import static java.sql.Types.NULL;
 
 
-public class MySqlUserDAO implements UserDAO {
+public class MySqlUserDAO extends GenericSqlDAO implements UserDAO {
 
     public MySqlUserDAO() throws DataAccessException {
-        configureDatabase();
+        super();
     }
 
     @Override
@@ -86,31 +83,8 @@ public class MySqlUserDAO implements UserDAO {
         return new User(username, hashedPassword, email);
     }
 
-    private int executeUpdate(String statement, Object... params) throws DataAccessException {
-        try (Connection conn = DatabaseManager.getConnection()) {
-            try (PreparedStatement ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
-                for (int i = 0; i < params.length; i++) {
-                    Object param = params[i];
-                    if (param instanceof String p) ps.setString(i + 1, p);
-                    else if (param instanceof Integer p) ps.setInt(i + 1, p);
-                    else if (param == null) ps.setNull(i + 1, NULL);
-                }
-                ps.executeUpdate();
-
-                ResultSet rs = ps.getGeneratedKeys();
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
-
-                return 0;
-            }
-        } catch (SQLException e) {
-            throw new DataAccessException("Error: executeUpdate failed", 500);
-        }
-    }
-
-    private final String[] createStatements = {
-            """
+    protected final String[] getCreateStatements(){
+            return new String[]{"""
             CREATE TABLE IF NOT EXISTS users (
               `username` varchar(256) NOT NULL,
               `hashedPassword` varchar(256) NOT NULL,
@@ -118,20 +92,7 @@ public class MySqlUserDAO implements UserDAO {
               PRIMARY KEY (`username`),
             )
             """
+            };
     };
-
-
-    private void configureDatabase() throws DataAccessException {
-        DatabaseManager.createDatabase();
-        try (Connection conn = DatabaseManager.getConnection()) {
-            for (String statement : createStatements) {
-                try (var preparedStatement = conn.prepareStatement(statement)) {
-                    preparedStatement.executeUpdate();
-                }
-            }
-        } catch (SQLException ex) {
-            throw new DataAccessException("Error: Unable to configure database, this is inside configureDatabase", 500);
-        }
-    }
 
 }
