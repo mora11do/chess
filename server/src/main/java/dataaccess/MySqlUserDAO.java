@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import models.User;
 import org.mindrot.jbcrypt.BCrypt;
 
+import javax.xml.crypto.Data;
 import java.sql.*;
 import java.util.HashMap;
 
@@ -17,45 +18,54 @@ public class MySqlUserDAO implements UserDAO {
         configureDatabase();
     }
 
-    public Pet addPet(Pet pet) throws ResponseException {
-        var statement = "INSERT INTO pet (name, type, json) VALUES (?, ?, ?)";
-        String json = new Gson().toJson(pet);
-        int id = executeUpdate(statement, pet.name(), pet.type(), json);
-        return new Pet(id, pet.name(), pet.type());
+    @Override
+    public void createUser(String username, String password, String email) throws DataAccessSQLException {
+        var statement = "INSERT INTO users (username, hashedPassword, email) VALUES (?, ?, ?)";
+
+        String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+        try {
+            executeUpdate(statement, username, hashedPassword, email);
+        }
+        catch (Exception e){
+            throw new DataAccessSQLException("Error: createUser broke", 500);
+        }
     }
 
     @Override
-    public void createUser(String username, String password, String email) throws DataAccessException {
-        var statement = "INSERT INTO users (username, password, email) VALUES (?, ?, ?)";
-        String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
-        executeUpdate(statement, username, hashedPassword, email);
-    }
-
-    public Pet getPet(int id) throws ResponseException {
+    public User getUser(String username) throws DataAccessSQLException {
         try (Connection conn = DatabaseManager.getConnection()) {
-            var statement = "SELECT id, json FROM pet WHERE id=?";
+            var statement = "SELECT username, hashedPassword, email FROM users WHERE username=?";
             try (PreparedStatement ps = conn.prepareStatement(statement)) {
-                ps.setInt(1, id);
+                ps.setString(1, username);
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
-                        return readPet(rs);
+                        return readUser(rs);
                     }
                 }
             }
         } catch (Exception e) {
-            throw new ResponseException(ResponseException.Code.ServerError, String.format("Unable to read data: %s", e.getMessage()));
+            throw new DataAccessSQLException("Error: getUser SQL failed", 500);
         }
         return null;
     }
 
-    @Override
-    public User getUser(String username) {
-        return users.get(username);
-    }
 
     @Override
-    public User getUser(User user) {
-        return users.get(user.username());
+    public User getUser(User user) throws DataAccessSQLException {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            var statement = "SELECT username, hashedPassword, email FROM users WHERE username=?";
+            try (PreparedStatement ps = conn.prepareStatement(statement)) {
+                ps.setString(1, user.username());
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return readUser(rs);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            throw new DataAccessSQLException("Error: getUser SQL failed", 500);
+        }
+        return null;
     }
 
     public PetList listPets() throws ResponseException {
@@ -92,6 +102,13 @@ public class MySqlUserDAO implements UserDAO {
         return pet.setId(id);
     }
 
+    private User readUser(ResultSet rs) throws SQLException{
+        var username = rs.getString("username");
+        var hashedPassword = rs.getString("hashedPassword");
+        var email = rs.getString("email");
+        return new User(username, hashedPassword, email);
+    }
+
     private int executeUpdate(String statement, Object... params) throws DataAccessException {
         try (Connection conn = DatabaseManager.getConnection()) {
             try (PreparedStatement ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
@@ -112,7 +129,7 @@ public class MySqlUserDAO implements UserDAO {
                 return 0;
             }
         } catch (SQLException e) {
-            throw new ResponseException(ResponseException.Code.ServerError, String.format("unable to update database: %s, %s", statement, e.getMessage()));
+            throw new DataAccessException("Error: executeUpdate failed", 500);
         }
     }
 
@@ -122,7 +139,7 @@ public class MySqlUserDAO implements UserDAO {
             """
             CREATE TABLE IF NOT EXISTS users (
               `username` varchar(256) NOT NULL,
-              `password` varchar(256) NOT NULL,
+              `hashedPassword` varchar(256) NOT NULL,
               `email` varchar(256) NOT NULL
               PRIMARY KEY (`username`),
             )
@@ -139,7 +156,7 @@ public class MySqlUserDAO implements UserDAO {
                 }
             }
         } catch (SQLException ex) {
-            throw new DataAccessException("Unable to configure database, this is inside configureDatabase", 500);
+            throw new DataAccessException("Error: Unable to configure database, this is inside configureDatabase", 500);
         }
     }
 
