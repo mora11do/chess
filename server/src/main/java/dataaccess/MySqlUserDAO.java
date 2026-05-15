@@ -68,38 +68,15 @@ public class MySqlUserDAO implements UserDAO {
         return null;
     }
 
-    public PetList listPets() throws ResponseException {
-        var result = new PetList();
-        try (Connection conn = DatabaseManager.getConnection()) {
-            var statement = "SELECT id, json FROM pet";
-            try (PreparedStatement ps = conn.prepareStatement(statement)) {
-                try (ResultSet rs = ps.executeQuery()) {
-                    while (rs.next()) {
-                        result.add(readPet(rs));
-                    }
-                }
-            }
-        } catch (Exception e) {
-            throw new ResponseException(ResponseException.Code.ServerError, String.format("Unable to read data: %s", e.getMessage()));
+    @Override
+    public void clear() throws DataAccessSQLException{
+        var statement = "TRUNCATE users";
+        try {
+            executeUpdate(statement);
         }
-        return result;
-    }
-
-    public void deletePet(Integer id) throws ResponseException {
-        var statement = "DELETE FROM pet WHERE id=?";
-        executeUpdate(statement, id);
-    }
-
-    public void deleteAllPets() throws ResponseException {
-        var statement = "TRUNCATE pet";
-        executeUpdate(statement);
-    }
-
-    private Pet readPet(ResultSet rs) throws SQLException {
-        var id = rs.getInt("id");
-        var json = rs.getString("json");
-        Pet pet = new Gson().fromJson(json, Pet.class);
-        return pet.setId(id);
+        catch (DataAccessException e){
+            throw new DataAccessSQLException("Error: clear failed, awkward",500);
+        }
     }
 
     private User readUser(ResultSet rs) throws SQLException{
@@ -116,7 +93,6 @@ public class MySqlUserDAO implements UserDAO {
                     Object param = params[i];
                     if (param instanceof String p) ps.setString(i + 1, p);
                     else if (param instanceof Integer p) ps.setInt(i + 1, p);
-                    else if (param instanceof PetType p) ps.setString(i + 1, p.toString());
                     else if (param == null) ps.setNull(i + 1, NULL);
                 }
                 ps.executeUpdate();
@@ -132,8 +108,6 @@ public class MySqlUserDAO implements UserDAO {
             throw new DataAccessException("Error: executeUpdate failed", 500);
         }
     }
-
-    private final String databaseName = DatabaseManager.getDatabaseName();
 
     private final String[] createStatements = {
             """
@@ -157,13 +131,6 @@ public class MySqlUserDAO implements UserDAO {
             }
         } catch (SQLException ex) {
             throw new DataAccessException("Error: Unable to configure database, this is inside configureDatabase", 500);
-        }
-    }
-
-
-        @Override
-        public void clear() {
-            users.clear();
         }
     }
 
