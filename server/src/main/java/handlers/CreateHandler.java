@@ -2,6 +2,7 @@ package handlers;
 
 import com.google.gson.Gson;
 import dataaccess.DataAccessException;
+import dataaccess.DataAccessSQLException;
 import io.javalin.http.Context;
 import models.CreateRequest;
 import services.CreateService;
@@ -27,6 +28,10 @@ public class CreateHandler {
             ctx.result(new Gson().toJson(Map.of("gameID",gameID)));
         }
         catch (DataAccessException e) {
+            ctx.status(e.getStatusCode());
+            ctx.result(new Gson().toJson(Map.of("message", e.getMessage())));
+        }
+        catch (DataAccessSQLException e) {
             ctx.status(e.getStatusCode());
             ctx.result(new Gson().toJson(Map.of("message", e.getMessage())));
         }

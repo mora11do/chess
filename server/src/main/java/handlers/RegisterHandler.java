@@ -2,6 +2,7 @@ package handlers;
 
 import com.google.gson.Gson;
 import dataaccess.DataAccessException;
+import dataaccess.DataAccessSQLException;
 import io.javalin.http.Context;
 import models.Auth;
 import models.RegisterRequest;
@@ -29,6 +30,10 @@ public void register(Context ctx) {
         ctx.result(new Gson().toJson(Map.of("username",newAuth.username(),"authToken",newAuth.authToken())));
     }
     catch (DataAccessException e) {
+        ctx.status(e.getStatusCode());
+        ctx.result(new Gson().toJson(Map.of("message", e.getMessage())));
+    }
+    catch (DataAccessSQLException e) {
         ctx.status(e.getStatusCode());
         ctx.result(new Gson().toJson(Map.of("message", e.getMessage())));
     }
