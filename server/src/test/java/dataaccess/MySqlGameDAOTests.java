@@ -2,7 +2,6 @@ package dataaccess;
 
 import chess.ChessGame;
 import models.Game;
-import models.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -12,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class MySqlGameDAOTests {
 
-    private final MySqlGameDAO GAME_DAO = new MySqlGameDAO();
+    static final MySqlGameDAO GAME_DAO = new MySqlGameDAO();
 
     public MySqlGameDAOTests() {
     }

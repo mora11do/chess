@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class MySqlUserDAOTests {
-    private final MySqlUserDAO USER_DAO = new MySqlUserDAO();
+    static final MySqlUserDAO USER_DAO = new MySqlUserDAO();
 
     public MySqlUserDAOTests() {
     }
