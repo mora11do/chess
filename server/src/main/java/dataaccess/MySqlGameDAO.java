@@ -13,7 +13,7 @@ import java.util.HashMap;
 
 public class MySqlGameDAO extends GenericSqlDAO implements GameDAO{
 
-    public MySqlGameDAO() throws DataAccessException{
+    public MySqlGameDAO() {
         super();
     }
 
@@ -27,7 +27,7 @@ public class MySqlGameDAO extends GenericSqlDAO implements GameDAO{
             return gameID;
         }
         catch (Exception e) {
-            throw new DataAccessSQLException("Error: createUser broke", 500);
+            throw new DataAccessSQLException("Error: createGame broke", 500);
         }
 
     }
@@ -45,7 +45,8 @@ public class MySqlGameDAO extends GenericSqlDAO implements GameDAO{
                 }
             }
         } catch (Exception e) {
-            throw new DataAccessSQLException("Error: getUser SQL failed", 500);
+            System.out.println(e.getMessage());
+            throw new DataAccessSQLException("Error: getGame SQL failed", 500);
         }
         return null;
     }
@@ -63,6 +64,7 @@ public class MySqlGameDAO extends GenericSqlDAO implements GameDAO{
                 }
             }
         } catch (Exception e) {
+            System.out.println(e.getMessage());
             throw new DataAccessSQLException("Error: getUser SQL failed", 500);
         }
         return null;
@@ -89,11 +91,11 @@ public class MySqlGameDAO extends GenericSqlDAO implements GameDAO{
     @Override
     public void updateGame(Game oldGame, Game newGame) throws DataAccessSQLException{
         try (Connection conn = DatabaseManager.getConnection()) {
-            var statement = "UPDATE games SET jsonGame = ? WHERE gameID = ?";
+            var statement = "UPDATE games SET whiteUsername = ?, blackUsername = ?, jsonGame = ? WHERE gameID = ?";
             var json = new Gson().toJson(newGame);
-            executeUpdate(statement, json, oldGame.gameID());
+            executeUpdate(statement, newGame.whiteUsername(), newGame.blackUsername(), json, oldGame.gameID());
         } catch (Exception e) {
-            throw new DataAccessSQLException("Error: getUser SQL failed", 500);
+            throw new DataAccessSQLException("Error: updateGame failed", 500);
         }
     }
 

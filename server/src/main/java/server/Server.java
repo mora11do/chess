@@ -11,9 +11,9 @@ import services.*;
 public class Server {
 
     private final Javalin javalin;
-    private final UserDAO users = new MemoryUserDAO();
-    private final AuthDAO auths = new MemoryAuthDAO();
-    private final GameDAO games = new MemoryGameDAO();
+    private final UserDAO users = new MySqlUserDAO();
+    private final AuthDAO auths = new MySqlAuthDAO();
+    private final GameDAO games = new MySqlGameDAO();
     private final RegisterHandler registerHandler = new RegisterHandler(new RegisterService(users, auths));
     private final LoginHandler loginHandler = new LoginHandler(new LoginService(users, auths));
     private final LogoutHandler logoutHandler = new LogoutHandler(new LogoutService(auths));

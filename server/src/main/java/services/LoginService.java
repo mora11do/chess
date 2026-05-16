@@ -7,6 +7,7 @@ import models.Auth;
 import models.LoginRequest;
 import models.RegisterRequest;
 import models.User;
+import org.mindrot.jbcrypt.BCrypt;
 
 
 public class LoginService {
@@ -26,7 +27,7 @@ public class LoginService {
         }
         User existingUser = userDAO.getUser(username);
         if (existingUser != null){
-            if (existingUser.password().equals(password)){
+            if (BCrypt.checkpw(password, existingUser.password())){
             return authDAO.createAuth(username);
             }
             else{

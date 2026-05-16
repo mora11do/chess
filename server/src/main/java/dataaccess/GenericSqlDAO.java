@@ -8,8 +8,14 @@ import static java.sql.Types.NULL;
 
 public abstract class GenericSqlDAO {
 
-    public GenericSqlDAO() throws DataAccessException {
-        configureDatabase();
+    public GenericSqlDAO() {
+        try{
+            configureDatabase();
+        }
+        catch(DataAccessException e){
+            System.out.println("Actual error: " + e.getMessage());
+            throw new DataAccessSQLException("Error: could not make the GenericSqlDAO", 500);
+        }
     }
 
     public void clearGeneric(String nameOfTable) throws DataAccessSQLException{
@@ -18,6 +24,7 @@ public abstract class GenericSqlDAO {
             executeUpdate(statement);
         }
         catch (DataAccessException e){
+            System.out.println(e.getMessage());
             throw new DataAccessSQLException("Error: clear failed in %s, awkward".formatted(nameOfTable),500);
         }
     }
@@ -41,6 +48,7 @@ public abstract class GenericSqlDAO {
                 return 0;
             }
         } catch (SQLException e) {
+            System.out.println(e.getMessage());
             throw new DataAccessException("Error: executeUpdate failed", 500);
         }
     }
@@ -57,6 +65,7 @@ public abstract class GenericSqlDAO {
                 }
             }
         } catch (SQLException ex) {
+            System.out.println("SQL error: " + ex.getMessage());
             throw new DataAccessException("Error: Unable to configure database, this is inside configureDatabase", 500);
         }
     }

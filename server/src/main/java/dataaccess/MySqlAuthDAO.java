@@ -10,7 +10,7 @@ import java.util.UUID;
 
 public class MySqlAuthDAO extends GenericSqlDAO implements AuthDAO {
 
-    public MySqlAuthDAO() throws DataAccessException {
+    public MySqlAuthDAO() {
         super();
     }
 
@@ -23,7 +23,8 @@ public class MySqlAuthDAO extends GenericSqlDAO implements AuthDAO {
             return returnAuth;
         }
         catch (Exception e){
-            throw new DataAccessSQLException("Error: createUser broke", 500);
+            System.out.println(e.getMessage());
+            throw new DataAccessSQLException("Error: createAuth broke", 500);
         }
     }
 
@@ -35,7 +36,8 @@ public class MySqlAuthDAO extends GenericSqlDAO implements AuthDAO {
             return new Auth(authToken, username);
         }
         catch (Exception e){
-            throw new DataAccessSQLException("Error: createUser broke", 500);
+            System.out.println(e.getMessage());
+            throw new DataAccessSQLException("Error: createAuth broke", 500);
         }
     }
 
@@ -48,7 +50,8 @@ public class MySqlAuthDAO extends GenericSqlDAO implements AuthDAO {
             return returnAuth;
         }
         catch (Exception e){
-            throw new DataAccessSQLException("Error: createUser broke", 500);
+            System.out.println(e.getMessage());
+            throw new DataAccessSQLException("Error: createAuth broke", 500);
         }
     }
 
@@ -66,7 +69,7 @@ public class MySqlAuthDAO extends GenericSqlDAO implements AuthDAO {
     @Override
     public Auth getAuth(String authToken) {
         try (Connection conn = DatabaseManager.getConnection()) {
-            var statement = "SELECT authToken, username FROM users WHERE authToken=?";
+            var statement = "SELECT authToken, username FROM auths WHERE authToken=?";
             try (PreparedStatement ps = conn.prepareStatement(statement)) {
                 ps.setString(1, authToken);
                 try (ResultSet rs = ps.executeQuery()) {
@@ -76,6 +79,7 @@ public class MySqlAuthDAO extends GenericSqlDAO implements AuthDAO {
                 }
             }
         } catch (Exception e) {
+            System.out.println(e.getMessage());
             throw new DataAccessSQLException("Error: getUser SQL failed", 500);
         }
         return null;
@@ -96,10 +100,10 @@ public class MySqlAuthDAO extends GenericSqlDAO implements AuthDAO {
 
     protected final String[] getCreateStatements(){
         return new String[]{"""
-            CREATE TABLE IF NOT EXISTS games (
+            CREATE TABLE IF NOT EXISTS auths (
               `authToken` varchar(256) NOT NULL,
               `username` varchar(256) NOT NULL,
-              PRIMARY KEY (`username`),
+              PRIMARY KEY (`authToken`)
             )
             """
         };

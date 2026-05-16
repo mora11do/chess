@@ -11,7 +11,7 @@ import static java.sql.Types.NULL;
 
 public class MySqlUserDAO extends GenericSqlDAO implements UserDAO {
 
-    public MySqlUserDAO() throws DataAccessException {
+    public MySqlUserDAO() {
         super();
     }
 
@@ -41,6 +41,7 @@ public class MySqlUserDAO extends GenericSqlDAO implements UserDAO {
                 }
             }
         } catch (Exception e) {
+            System.out.println(e.getMessage());
             throw new DataAccessSQLException("Error: getUser SQL failed", 500);
         }
         return null;
@@ -60,6 +61,7 @@ public class MySqlUserDAO extends GenericSqlDAO implements UserDAO {
                 }
             }
         } catch (Exception e) {
+            System.out.println(e.getMessage());
             throw new DataAccessSQLException("Error: getUser SQL failed", 500);
         }
         return null;
@@ -88,8 +90,8 @@ public class MySqlUserDAO extends GenericSqlDAO implements UserDAO {
             CREATE TABLE IF NOT EXISTS users (
               `username` varchar(256) NOT NULL,
               `hashedPassword` varchar(256) NOT NULL,
-              `email` varchar(256) NOT NULL
-              PRIMARY KEY (`username`),
+              `email` varchar(256) NOT NULL,
+              PRIMARY KEY (`username`)
             )
             """
             };
