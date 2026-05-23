@@ -1,13 +1,11 @@
 package client;
 
 import dataaccess.DataAccessException;
-import models.Auth;
-import models.RegisterRequest;
-import models.User;
+import models.*;
 import org.junit.jupiter.api.*;
 import server.Server;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 public class ServerFacadeTests {
@@ -46,5 +44,82 @@ public class ServerFacadeTests {
             facade.register(new User("bob", "password", "bob@gmail.com"));
         });
     }
+
+    @Test
+    public void loginSuccess() throws ResponseException{
+        User newUser =  new User("username", "password", "email");
+        facade.register(newUser);
+        Auth auth = facade.login(newUser);
+        Assertions.assertNotNull(auth);
+    }
+
+    @Test
+    public void loginFailure() throws ResponseException{
+        assertThrows(ResponseException.class, () -> {
+            facade.login(new User("userDoesNotExist", "password", "email"));;
+        });
+    }
+
+//    @Test
+//    public void clearSuccess() throws DataAccessException {
+//        Auth auth = R_SERVICE.register(new RegisterRequest("username", "password","email"));
+//        C_SERVICE.clear();
+//        assertThrows(DataAccessException.class, () ->
+//                L_SERVICE.login(new LoginRequest("username", "password")));
+//    }
+//
+//    @Test
+//    public void createSuccess() throws DataAccessException {
+//        Auth auth = R_SERVICE.register(new RegisterRequest("username", "password", "email"));
+//        int gameID = C_SERVICE.create(new CreateRequest(auth.authToken(), "game"));
+//        assertNotNull(gameID);
+//    }
+//
+//    @Test
+//    public void createUnauthorized() {
+//        assertThrows(DataAccessException.class, () ->
+//                C_SERVICE.create(new CreateRequest("fakeToken", "game")));
+//    }
+//
+//    @Test
+//    public void joinSuccess() throws DataAccessException {
+//        Auth auth = R_SERVICE.register(new RegisterRequest("username", "password", "email"));
+//        int gameID = C_SERVICE.create(new CreateRequest(auth.authToken(), "game"));
+//        assertDoesNotThrow(() ->
+//                J_SERVICE.join(new JoinRequest(auth.authToken(), "WHITE", gameID)));
+//    }
+//
+//    @Test
+//    public void joinUnauthorized() {
+//        assertThrows(DataAccessException.class, () ->
+//                J_SERVICE.join(new JoinRequest("fakeToken", "WHITE", 1234)));
+//    }
+//
+//    @Test
+//    public void listSuccess() throws DataAccessException {
+//        Auth auth = R_SERVICE.register(new RegisterRequest("bob", "password", "bob@gmail.com"));
+//        C_SERVICE.create(new CreateRequest(auth.authToken(), "mygame"));
+//        var games = L_SERVICE.list(new ListRequest(auth.authToken()));
+//        assertEquals(1, games.size());
+//    }
+//
+//    @Test
+//    public void listUnauthorized() {
+//        assertThrows(DataAccessException.class, () ->
+//                L_SERVICE.list(new ListRequest("fakeToken")));
+//    }
+//
+//    @Test
+//    public void logoutSuccess() throws DataAccessException {
+//        Auth auth = R_SERVICE.register(new RegisterRequest("username", "password", "email"));
+//        assertDoesNotThrow(() ->
+//                L_SERVICE.logout(new LogoutRequest(auth.authToken())));
+//    }
+//
+//    @Test
+//    public void logoutUnauthorized() {
+//        assertThrows(DataAccessException.class, () ->
+//                L_SERVICE.logout(new LogoutRequest("fakeToken")));
+//    }
 
 }
