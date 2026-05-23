@@ -110,18 +110,18 @@ public class ServerFacadeTests {
         assertThrows(ResponseException.class, () ->
                 facade.list(new Auth("fakeAuthToken","username")));
     }
-//
-//    @Test
-//    public void logoutSuccess() throws DataAccessException {
-//        Auth auth = R_SERVICE.register(new RegisterRequest("username", "password", "email"));
-//        assertDoesNotThrow(() ->
-//                L_SERVICE.logout(new LogoutRequest(auth.authToken())));
-//    }
-//
-//    @Test
-//    public void logoutUnauthorized() {
-//        assertThrows(DataAccessException.class, () ->
-//                L_SERVICE.logout(new LogoutRequest("fakeToken")));
-//    }
+
+    @Test
+    public void logoutSuccess() throws ResponseException {
+        Auth auth = facade.register(new User("username", "password", "email"));
+        assertDoesNotThrow(() ->
+                facade.logout(auth));
+    }
+
+    @Test
+    public void logoutUnauthorized() {
+        assertThrows(ResponseException.class, () ->
+                facade.logout(new Auth("fakeAuthToken","username")));
+    }
 
 }
