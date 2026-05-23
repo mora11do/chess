@@ -98,6 +98,7 @@ public class ServerFacade {
         if (!isSuccessful(status)) {
             var body = response.body();
             if (body != null) {
+                System.out.println("Error body: " + body);
                 throw ResponseException.fromJson(body);
             }
 

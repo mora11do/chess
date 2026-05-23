@@ -68,19 +68,19 @@ public class ServerFacadeTests {
         assertThrows(ResponseException.class, () ->
                 facade.login(newUser));
     }
-//
-//    @Test
-//    public void createSuccess() throws DataAccessException {
-//        Auth auth = R_SERVICE.register(new RegisterRequest("username", "password", "email"));
-//        int gameID = C_SERVICE.create(new CreateRequest(auth.authToken(), "game"));
-//        assertNotNull(gameID);
-//    }
-//
-//    @Test
-//    public void createUnauthorized() {
-//        assertThrows(DataAccessException.class, () ->
-//                C_SERVICE.create(new CreateRequest("fakeToken", "game")));
-//    }
+
+    @Test
+    public void createSuccess() throws ResponseException {
+        Auth auth = facade.register(new User("username", "password", "email"));
+        Assertions.assertDoesNotThrow(() -> facade.create(auth, "gameName"));
+    }
+
+    @Test
+    public void createUnauthorized() throws ResponseException{
+        facade.register(new User("username", "password", "email"));
+        assertThrows(ResponseException.class, () ->
+                facade.create(new Auth("fakeAuthToken","username"), "gameName"));
+    }
 //
 //    @Test
 //    public void joinSuccess() throws DataAccessException {
