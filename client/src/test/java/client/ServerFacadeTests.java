@@ -81,20 +81,21 @@ public class ServerFacadeTests {
         assertThrows(ResponseException.class, () ->
                 facade.create(new Auth("fakeAuthToken","username"), "gameName"));
     }
-//
-//    @Test
-//    public void joinSuccess() throws DataAccessException {
-//        Auth auth = R_SERVICE.register(new RegisterRequest("username", "password", "email"));
-//        int gameID = C_SERVICE.create(new CreateRequest(auth.authToken(), "game"));
-//        assertDoesNotThrow(() ->
-//                J_SERVICE.join(new JoinRequest(auth.authToken(), "WHITE", gameID)));
-//    }
-//
-//    @Test
-//    public void joinUnauthorized() {
-//        assertThrows(DataAccessException.class, () ->
-//                J_SERVICE.join(new JoinRequest("fakeToken", "WHITE", 1234)));
-//    }
+
+    @Test
+    public void joinSuccess() throws ResponseException {
+        Auth auth = facade.register(new User("username", "password", "email"));
+        int gameID = facade.create(auth, "gameName");
+
+        assertDoesNotThrow(() ->
+                facade.join(auth, gameID, "WHITE"));
+    }
+
+    @Test
+    public void joinUnauthorized() {
+        assertThrows(ResponseException.class, () ->
+                facade.join(new Auth("fakeAuthToken", "username"),1, "WHITE"));
+    }
 //
 //    @Test
 //    public void listSuccess() throws DataAccessException {

@@ -1,10 +1,7 @@
 package client;
 
 import com.google.gson.Gson;
-import models.Auth;
-import models.Game;
-import models.GameWithNoChessGame;
-import models.User;
+import models.*;
 
 import java.net.*;
 import java.net.http.*;
@@ -12,6 +9,7 @@ import java.net.http.HttpRequest.BodyPublisher;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.util.ArrayList;
+import java.util.Map;
 
 public class ServerFacade {
     private final HttpClient client = HttpClient.newHttpClient();
@@ -45,14 +43,15 @@ public class ServerFacade {
         return handleResponse(response,ArrayList.class);
     }
 
-    public void create(Auth auth, String gameName) throws ResponseException {
-        var request = buildRequest("POST", "/game", gameName, auth);
+    public int create(Auth auth, String gameName) throws ResponseException {
+        var request = buildRequest("POST", "/game", Map.of("gameName", gameName), auth);
         var response = sendRequest(request);
-        handleResponse(response,null);
+        return handleResponse(response, CreateGameResponse.class).gameID();
     }
 
-    public void join(Auth auth, Game game) throws ResponseException {
-        var request = buildRequest("PUT", "/game", game, auth);
+    public void join(Auth auth, int gameID, String playerColor) throws ResponseException {
+        var body = Map.of("gameID", gameID, "playerColor", playerColor);
+        var request = buildRequest("PUT", "/game", body, auth);
         var response = sendRequest(request);
         handleResponse(response,null);
     }
