@@ -40,7 +40,7 @@ public class ServerFacade {
     public ArrayList<GameWithNoChessGame> list(Auth auth) throws ResponseException {
         var request = buildRequest("GET", "/game", null, auth);
         var response = sendRequest(request);
-        return handleResponse(response,ArrayList.class);
+        return handleResponse(response,ListResponse.class).games();
     }
 
     public int create(Auth auth, String gameName) throws ResponseException {

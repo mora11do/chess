@@ -96,20 +96,20 @@ public class ServerFacadeTests {
         assertThrows(ResponseException.class, () ->
                 facade.join(new Auth("fakeAuthToken", "username"),1, "WHITE"));
     }
-//
-//    @Test
-//    public void listSuccess() throws DataAccessException {
-//        Auth auth = R_SERVICE.register(new RegisterRequest("bob", "password", "bob@gmail.com"));
-//        C_SERVICE.create(new CreateRequest(auth.authToken(), "mygame"));
-//        var games = L_SERVICE.list(new ListRequest(auth.authToken()));
-//        assertEquals(1, games.size());
-//    }
-//
-//    @Test
-//    public void listUnauthorized() {
-//        assertThrows(DataAccessException.class, () ->
-//                L_SERVICE.list(new ListRequest("fakeToken")));
-//    }
+
+    @Test
+    public void listSuccess() throws ResponseException {
+        Auth auth = facade.register(new User("username", "password", "email"));
+        facade.create(auth, "gameName");
+        var games = facade.list(auth);
+        assertEquals(1, games.size());
+    }
+
+    @Test
+    public void listUnauthorized() {
+        assertThrows(ResponseException.class, () ->
+                facade.list(new Auth("fakeAuthToken","username")));
+    }
 //
 //    @Test
 //    public void logoutSuccess() throws DataAccessException {
