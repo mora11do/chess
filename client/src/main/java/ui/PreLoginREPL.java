@@ -69,14 +69,14 @@ public class PreLoginREPL {
             new PostLoginREPL(server, auth).run();
             return String.format("You are now registered and signed in as %s.", params[0]);
         }
-        throw new ResponseException(ResponseException.Code.ClientError, "Expected: <yourname> <yourpassword> <youremail>");
+        throw new ResponseException(ResponseException.Code.ClientError, "Expected: <yourName> <yourPassword> <yourEmail>");
     }
 
     public String help() {
         return """
                 - help
-                - register <yourname> <yourpassword> <youremail>
-                - login <yourname> <yourpassword>
+                - register <yourName> <yourPassword> <yourEmail>
+                - login <yourName> <yourPassword>
                 - quit
                 """;
     }
