@@ -60,13 +60,14 @@ public class ServerFacadeTests {
         });
     }
 
-//    @Test
-//    public void clearSuccess() throws DataAccessException {
-//        Auth auth = R_SERVICE.register(new RegisterRequest("username", "password","email"));
-//        C_SERVICE.clear();
-//        assertThrows(DataAccessException.class, () ->
-//                L_SERVICE.login(new LoginRequest("username", "password")));
-//    }
+    @Test
+    public void clearSuccess() throws ResponseException {
+        User newUser =  new User("username", "password", "email");
+        facade.register(newUser);
+        facade.clear();
+        assertThrows(ResponseException.class, () ->
+                facade.login(newUser));
+    }
 //
 //    @Test
 //    public void createSuccess() throws DataAccessException {
