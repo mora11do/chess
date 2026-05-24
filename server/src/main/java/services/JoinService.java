@@ -28,7 +28,7 @@ public class JoinService extends GenericService {
         if (authIsReal(authToken)){
             var gameWantToJoin = gameDAO.getGame(gameID);
             if (gameWantToJoin != null){
-                if (playerColor.equals("WHITE")) {
+                if (playerColor.equals("WHITE") || playerColor.equals("white")) {
                     if (gameWantToJoin.whiteUsername() == null){
                         gameDAO.updateGame(gameWantToJoin, new Game(gameWantToJoin.gameID(), authDAO.getAuth(authToken).username(),
                                 gameWantToJoin.blackUsername(), gameWantToJoin.gameName(), gameWantToJoin.game()));
@@ -37,7 +37,7 @@ public class JoinService extends GenericService {
                         throw new DataAccessException("Error: White is already taken", 403);
                     }
                 }
-                else if (playerColor.equals("BLACK")) {
+                else if (playerColor.equals("BLACK") || playerColor.equals("black")) {
                     if (gameWantToJoin.blackUsername() == null) {
                         gameDAO.updateGame(gameWantToJoin, new Game(gameWantToJoin.gameID(), gameWantToJoin.whiteUsername(),
                                 authDAO.getAuth(authToken).username(), gameWantToJoin.gameName(), gameWantToJoin.game()));
