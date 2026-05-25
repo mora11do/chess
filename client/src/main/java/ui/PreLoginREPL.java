@@ -17,7 +17,7 @@ public class PreLoginREPL {
     }
 
     public void run() {
-        System.out.println("Welcome to the pet store. Sign in to start.");
+        System.out.println("Welcome to Chess. Sign in to start.");
         System.out.print(help());
 
         Scanner scanner = new Scanner(System.in);
@@ -46,8 +46,9 @@ public class PreLoginREPL {
                 case "login" -> login(params);
                 case "register" -> register(params);
                 case "help" -> help();
+                case "clearhack" -> clear();
                 case "quit" -> "quit";
-                default -> help();
+                default -> "Unknown command. Available commands:\n" + help();
             };
         } catch (ResponseException ex) {
             return ex.getMessage();
@@ -57,8 +58,9 @@ public class PreLoginREPL {
     public String login(String... params) throws ResponseException {
         if (params.length >= 2) {
             this.auth = server.login(new User(params[0],params[1],"fakeEmail"));
+            System.out.println(String.format("You signed in as %s.", params[0]));
             new PostLoginREPL(server, auth).run();
-            return String.format("You signed in as %s.", params[0]);
+            return "";
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <yourname> <yourpassword>");
     }
@@ -66,10 +68,16 @@ public class PreLoginREPL {
     public String register(String... params) throws ResponseException {
         if (params.length >= 3) {
             this.auth = server.register(new User(params[0],params[1],params[2]));
+            System.out.println(String.format("You are now registered and signed in as %s.", params[0]));
             new PostLoginREPL(server, auth).run();
-            return String.format("You are now registered and signed in as %s.", params[0]);
+            return "";
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <yourName> <yourPassword> <yourEmail>");
+    }
+
+    public String clear() throws ResponseException {
+        server.clear();
+        return "DATABASE HAS BEEN CLEARED";
     }
 
     public String help() {

@@ -22,23 +22,26 @@ public class GameplayREPL {
     }
 
     public void run() {
+        drawBoard();
         System.out.print(help());
 
         Scanner scanner = new Scanner(System.in);
         var result = "";
         while (!result.equals("leave")) {
-            drawBoard();
             String line = scanner.nextLine();
+            if (!line.equals("leave")) {
+                drawBoard();
 
-            try {
-                result = eval(line);
-                System.out.println(result);
-            } catch (Throwable e) {
-                var msg = e.toString();
-                System.out.print(msg);
+                try {
+                    result = eval(line);
+                    System.out.println(result);
+                } catch (Throwable e) {
+                    var msg = e.toString();
+                    System.out.print(msg);
+                }
             }
         }
-        System.out.println();
+        System.out.println("You left the game.");
     }
 
 
@@ -48,16 +51,21 @@ public class GameplayREPL {
             String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
             return switch (cmd) {
                 case "help" -> help();
-                case "leave" -> "leave";
-                default -> help();
+                case "leave" -> leave();
+                default -> "Unknown command. Available commands:\n" + help();
             };
     }
 
     public String help() {
         return """
-                - leave
+                - leave (WARNING: If you leave, you can't rejoin this game!)
                 - help
                 """;
+    }
+
+    public String leave(){
+
+        return "leave";
     }
 
     public void print(ChessGame.TeamColor teamColor, ChessPiece.PieceType pieceType){

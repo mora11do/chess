@@ -50,10 +50,10 @@ public class PostLoginREPL {
                 case "create" -> create(params);
                 case "list" -> list();
                 case "join" -> join(params);
-//                case "observe" -> observe(params);
+                case "observe" -> observe(params);
                 case "help" -> help();
                 case "quit" -> "quit";
-                default -> help();
+                default -> "Unknown command. Available commands:\n" + help();
             };
         } catch (ResponseException ex) {
             return ex.getMessage();
@@ -62,6 +62,7 @@ public class PostLoginREPL {
 
     public String logout() throws ResponseException {
         server.logout(auth);
+        System.out.print("You have logged out.");
         return "logout";
     }
 
@@ -78,8 +79,13 @@ public class PostLoginREPL {
         games = server.list(auth);
         int counterForListGames = 1;
         for (var game:games){
-            System.out.println(counterForListGames + " " + game.toString());
+            System.out.println(counterForListGames + " " + game.gameName() +
+                    ", White Player: " + game.whiteUsername() + ", Black Player: "
+                    + game.blackUsername());
             counterForListGames++;
+        }
+        if (games.isEmpty()){
+            System.out.println("There are no games.");
         }
         return "";
     }
@@ -91,18 +97,16 @@ public class PostLoginREPL {
             String playerColor = params[1];
             server.join(auth, gameID, playerColor);
             new GameplayREPL(server, playerColor, new ChessGame()).run();
-            return "You joined a game successfully.";
+            return "";
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <gameNumber> <teamColor>");
     }
 
     public String observe(String... params) throws ResponseException {
         if (params.length >= 1) {
-            var gameTheyWant = games.get(Integer.parseInt(params[0])-1);
-            int gameID = gameTheyWant.gameID();
-            server.join(auth, gameID, "WHITE");
+            System.out.println("You are observing a game.");
             new GameplayREPL(server, "WHITE", new ChessGame()).run();
-            return "You are observing a game.";
+            return "";
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <gameNumber>");
     }
@@ -112,8 +116,8 @@ public class PostLoginREPL {
                 - logout
                 - create <gameName>
                 - list
-                - join
-                - observe -> observe(params);
+                - join <gameNumber> <teamColor>
+                - observe <gameNumber>;
                 - help
                 """;
     }

@@ -56,7 +56,6 @@ public class ServerFacade {
         handleResponse(response,null);
     }
 
-
     public void clear() throws ResponseException {
         var request = buildRequest("DELETE", "/db", null,null);
         sendRequest(request);
@@ -97,7 +96,6 @@ public class ServerFacade {
         if (!isSuccessful(status)) {
             var body = response.body();
             if (body != null) {
-                System.out.println("Error body: " + body);
                 throw ResponseException.fromJson(body);
             }
 
