@@ -91,17 +91,21 @@ public class PostLoginREPL {
         return "";
     }
 
+    public void makeSureGameExistsBeforeJoinOrObserve(String param) throws ResponseException{
+        try{
+            Integer.parseInt(param);
+        }
+        catch(NumberFormatException e){
+            throw new ResponseException(ResponseException.Code.ClientError, "Error: Please enter the game number (not the name).");
+        }
+        if (Integer.parseInt(param) > games.size() || Integer.parseInt(param) <= 0){
+            throw new ResponseException(ResponseException.Code.ClientError, "Error: No game with that number.");
+        }
+    }
+
     public String join(String... params) throws ResponseException {
         if (params.length >= 2) {
-            try{
-                Integer.parseInt(params[0]);
-            }
-            catch(NumberFormatException e){
-                throw new ResponseException(ResponseException.Code.ClientError, "Error: Please enter the game number (not the name).");
-            }
-            if (Integer.parseInt(params[0]) > games.size() || Integer.parseInt(params[0]) <= 0){
-                throw new ResponseException(ResponseException.Code.ClientError, "Error: No game with that number.");
-            }
+            makeSureGameExistsBeforeJoinOrObserve(params[0]);
             int intOfGameTheyWant = Integer.parseInt(params[0])-1;
             var gameTheyWant = games.get(intOfGameTheyWant);
             int gameID = gameTheyWant.gameID();
@@ -115,6 +119,7 @@ public class PostLoginREPL {
 
     public String observe(String... params) throws ResponseException {
         if (params.length >= 1) {
+            makeSureGameExistsBeforeJoinOrObserve(params[0]);
             System.out.println("You are observing a game.");
             new GameplayREPL(server, "WHITE", new ChessGame()).run();
             return "";

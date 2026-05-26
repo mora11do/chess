@@ -132,33 +132,33 @@ public class GameplayREPL {
         System.out.print(" "+(9-row)+" ");
     }
 
+    public void printBlackNumberSquare(int row){
+        System.out.print(EscapeSequences.SET_BG_COLOR_BLUE + EscapeSequences.SET_TEXT_COLOR_BLACK);
+        System.out.print(" "+(row)+" ");
+    }
+
     public void drawBoard(){
-        if (playerColor.equals("WHITE") || playerColor.equals("white")){
-            printWhiteLetterRow();
-            for (int row = 1; row<9; row++){
-                printWhiteNumberSquare(row);
-                for (int col = 1; col<9; col++) {
-                    ChessPiece piece = game.getBoard().getPiece(new ChessPosition(row, col));
-                    setWhiteBGColor(row, col);
-                    if (piece == null){
-                        System.out.print(EscapeSequences.EMPTY);
-                    }
-                    else{
-                        print(piece.getTeamColor(), piece.getPieceType());
-                    }
-                }
-                printWhiteNumberSquare(row);
-                System.out.print(EscapeSequences.SET_BG_COLOR_BLACK);
-                System.out.println();
-            }
+        if (playerColor.equals("WHITE") || playerColor.equals("white")) {
             printWhiteLetterRow();
         }
         else{
             printBlackLetterRow();
-            for (int row = 8; row>0; row--){
-                printWhiteNumberSquare(row);
-                for (int col = 8; col>0; col--) {
-                    ChessPiece piece = game.getBoard().getPiece(new ChessPosition(row, col));
+        }
+            for (int row = 1; row<9; row++){
+                if (playerColor.equals("WHITE") || playerColor.equals("white")) {
+                    printWhiteNumberSquare(row);
+                }
+                else{
+                    printBlackNumberSquare(row);
+                }
+                for (int col = 1; col<9; col++) {
+                    ChessPiece piece;
+                    if (playerColor.equals("WHITE") || playerColor.equals("white")) {
+                        piece = game.getBoard().getPiece(new ChessPosition(row, col));
+                    }
+                    else{
+                        piece = game.getBoard().getPiece(new ChessPosition(9-row, 9-col));
+                    }
                     setWhiteBGColor(row, col);
                     if (piece == null){
                         System.out.print(EscapeSequences.EMPTY);
@@ -167,10 +167,19 @@ public class GameplayREPL {
                         print(piece.getTeamColor(), piece.getPieceType());
                     }
                 }
-                printWhiteNumberSquare(row);
+                if (playerColor.equals("WHITE") || playerColor.equals("white")) {
+                    printWhiteNumberSquare(row);
+                }
+                else{
+                    printBlackNumberSquare(row);
+                }
                 System.out.print(EscapeSequences.SET_BG_COLOR_BLACK);
                 System.out.println();
             }
+        if (playerColor.equals("WHITE") || playerColor.equals("white")) {
+            printWhiteLetterRow();
+        }
+        else{
             printBlackLetterRow();
         }
         System.out.print(EscapeSequences.SET_BG_COLOR_BLACK + EscapeSequences.SET_TEXT_COLOR_WHITE);
