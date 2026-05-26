@@ -115,18 +115,15 @@ public class GameplayREPL {
         }
     }
 
-    public void setBlackBGColor(int col, int row){
-        if ((row+col)%2 == 0){
-            System.out.print(EscapeSequences.SET_BG_COLOR_DARK_GREEN);
-        }
-        else{
-            System.out.print(EscapeSequences.SET_BG_COLOR_LIGHT_GREY);
-        }
-    }
-
-    public void printLetterRow(){
+    public void printWhiteLetterRow(){
         System.out.print(EscapeSequences.SET_BG_COLOR_BLUE + EscapeSequences.SET_TEXT_COLOR_BLACK);
         System.out.print("    a  b  c  d  e  f  g  h    ");
+        System.out.println(EscapeSequences.SET_BG_COLOR_BLACK);
+    }
+
+    public void printBlackLetterRow(){
+        System.out.print(EscapeSequences.SET_BG_COLOR_BLUE + EscapeSequences.SET_TEXT_COLOR_BLACK);
+        System.out.print("    h  g  f  e  d  c  b  a    ");
         System.out.println(EscapeSequences.SET_BG_COLOR_BLACK);
     }
 
@@ -135,14 +132,9 @@ public class GameplayREPL {
         System.out.print(" "+(9-row)+" ");
     }
 
-    public void printBlackNumberSquare(int row){
-        System.out.print(EscapeSequences.SET_BG_COLOR_BLUE + EscapeSequences.SET_TEXT_COLOR_BLACK);
-        System.out.print(" "+(row)+" ");
-    }
-
     public void drawBoard(){
         if (playerColor.equals("WHITE") || playerColor.equals("white")){
-            printLetterRow();
+            printWhiteLetterRow();
             for (int row = 1; row<9; row++){
                 printWhiteNumberSquare(row);
                 for (int col = 1; col<9; col++) {
@@ -159,15 +151,15 @@ public class GameplayREPL {
                 System.out.print(EscapeSequences.SET_BG_COLOR_BLACK);
                 System.out.println();
             }
-            printLetterRow();
+            printWhiteLetterRow();
         }
         else{
-            printLetterRow();
+            printBlackLetterRow();
             for (int row = 8; row>0; row--){
-                printBlackNumberSquare(row);
+                printWhiteNumberSquare(row);
                 for (int col = 8; col>0; col--) {
                     ChessPiece piece = game.getBoard().getPiece(new ChessPosition(row, col));
-                    setBlackBGColor(row, col);
+                    setWhiteBGColor(row, col);
                     if (piece == null){
                         System.out.print(EscapeSequences.EMPTY);
                     }
@@ -175,11 +167,11 @@ public class GameplayREPL {
                         print(piece.getTeamColor(), piece.getPieceType());
                     }
                 }
-                printBlackNumberSquare(row);
+                printWhiteNumberSquare(row);
                 System.out.print(EscapeSequences.SET_BG_COLOR_BLACK);
                 System.out.println();
             }
-            printLetterRow();
+            printBlackLetterRow();
         }
         System.out.print(EscapeSequences.SET_BG_COLOR_BLACK + EscapeSequences.SET_TEXT_COLOR_WHITE);
     }

@@ -30,7 +30,9 @@ public class PostLoginREPL {
 
             try {
                 result = eval(line);
-                System.out.println(result);
+                if (!result.equals("logout")) {
+                    System.out.println(result);
+                }
             } catch (Throwable e) {
                 var msg = e.toString();
                 System.out.print(msg);
@@ -91,7 +93,17 @@ public class PostLoginREPL {
 
     public String join(String... params) throws ResponseException {
         if (params.length >= 2) {
-            var gameTheyWant = games.get(Integer.parseInt(params[0])-1);
+            try{
+                Integer.parseInt(params[0]);
+            }
+            catch(NumberFormatException e){
+                throw new ResponseException(ResponseException.Code.ClientError, "Error: Please enter the game number (not the name).");
+            }
+            if (Integer.parseInt(params[0]) > games.size() || Integer.parseInt(params[0]) <= 0){
+                throw new ResponseException(ResponseException.Code.ClientError, "Error: No game with that number.");
+            }
+            int intOfGameTheyWant = Integer.parseInt(params[0])-1;
+            var gameTheyWant = games.get(intOfGameTheyWant);
             int gameID = gameTheyWant.gameID();
             String playerColor = params[1];
             server.join(auth, gameID, playerColor);
