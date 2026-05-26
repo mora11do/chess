@@ -27,7 +27,8 @@ public class PreLoginREPL {
 
             try {
                 result = eval(line);
-                System.out.println(result);
+                System.out.print(result);
+                System.out.println();
             } catch (Throwable e) {
                 var msg = e.toString();
                 System.out.print(msg);
