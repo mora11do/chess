@@ -40,6 +40,9 @@ public class GameplayREPL {
                     System.out.print(msg);
                 }
             }
+            else{
+                result = "leave";
+            }
         }
         System.out.println("You left the game.");
     }
