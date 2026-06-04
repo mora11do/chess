@@ -36,4 +36,11 @@ public class ConnectionManager {
             }
         }
     }
+
+    public void broadcastToOne(Session session, ServerMessage serverMessage) throws IOException {
+        String msg = new Gson().toJson(serverMessage);
+        if (session.isOpen()) {
+                session.getRemote().sendString(msg);
+            }
+        }
 }
