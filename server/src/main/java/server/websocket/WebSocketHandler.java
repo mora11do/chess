@@ -40,11 +40,13 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     public void handleMessage(WsMessageContext ctx) {
         try {
             UserGameCommand command = new Gson().fromJson(ctx.message(), UserGameCommand.class);
+            Integer gameID = command.getGameID();
+            String username = authDAO.getAuth(command.getAuthToken()).username();
+            Session session = ctx.session;
             switch (command.getCommandType()) {
-                case CONNECT -> connect(command.getGameID(),
-                        authDAO.getAuth(command.getAuthToken()).username(), ctx.session);
+                case CONNECT -> connect(gameID, username, session);
 //                case MAKE_MOVE -> exit(action.visitorName(), ctx.session);
-//                case LEAVE ->
+                case LEAVE -> leave(gameID,username,session);
 //                case RESIGN ->
             }
         } catch (IOException ex) {
@@ -60,20 +62,42 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
     private void connect(Integer gameID, String username, Session session) throws IOException{
         connections.add(gameID, session);
-        ChessGame game = gameDAO.getGame(gameID).game();
+        Game gameData = gameDAO.getGame(gameID);
+        ChessGame game = gameData.game();
         LoadGameMessage loadGameMessage = new LoadGameMessage(game);
         connections.broadcastToOne(session, loadGameMessage);
-        var message = String.format("%s has connected to the game", username);
+        String colorOrObserver;
+        if (gameData.whiteUsername().equals(username)){
+            colorOrObserver = "white";
+        }
+        else if (gameData.blackUsername().equals(username)){
+            colorOrObserver = "black";
+        }
+        else{
+            colorOrObserver = "an observer";
+        }
+        var message = String.format("%s has connected to the game as %s", username, colorOrObserver);
         var notification = new NotificationMessage(message);
         connections.broadcast(session, notification, gameID);
     }
 
-//    private void exit(String visitorName, Session session) throws IOException {
-//        var message = String.format("%s left the shop", visitorName);
-//        var notification = new Notification(Notification.Type.DEPARTURE, message);
-//        connections.broadcast(session, notification);
-//        connections.remove(session);
-//    }
+    private void leave(Integer gameID, String username, Session session) throws IOException{
+        connections.remove(gameID, session);
+        var oldGame = gameDAO.getGame(gameID);
+        Game newGame;
+        if (username.equals(gameDAO.getGame(gameID).whiteUsername())) {
+            newGame = new Game(gameID,null,
+                    oldGame.blackUsername(), oldGame.gameName(), oldGame.game());
+        }
+        else{
+            newGame = new Game(gameID,oldGame.whiteUsername(),
+                    null, oldGame.gameName(), oldGame.game());
+        }
+        gameDAO.updateGame(oldGame, newGame);
+        var message = String.format("%s has left to the game", username);
+        var notification = new NotificationMessage(message);
+        connections.broadcast(session, notification, gameID);
+    }
 //
 //    public void makeNoise(String petName, String sound) throws ResponseException {
 //        try {
