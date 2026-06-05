@@ -142,4 +142,8 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         var notification = new NotificationMessage(message);
         connections.broadcast(session, notification, gameID);
     }
+
+//    private void resign(Integer gameID, String username, Session session){
+//        connections
+//    }
 }

@@ -4,6 +4,7 @@ import dataaccess.*;
 import handlers.*;
 import io.javalin.*;
 import models.*;
+import server.websocket.WebSocketHandler;
 import services.*;
 
 
@@ -21,6 +22,7 @@ public class Server {
     private final CreateHandler createHandler = new CreateHandler(new CreateService(games, auths));
     private final JoinHandler joinHandler = new JoinHandler(new JoinService(games, auths));
     private final ClearHandler clearHandler = new ClearHandler(new ClearService(games, auths, users));
+    private final WebSocketHandler webSocketHandler = new WebSocketHandler(games, auths);
 
     public Server() {
         javalin = Javalin.create(config -> config.staticFiles.add("web"))
@@ -31,6 +33,11 @@ public class Server {
                 .post("/game", createHandler::create)
                 .put("/game", joinHandler::join)
                 .delete("/db", clearHandler::clear)
+                .ws("/ws", ws -> {
+                    ws.onConnect(webSocketHandler::handleConnect);
+                            ws.onMessage(webSocketHandler::handleMessage);
+                    ws.onClose(webSocketHandler::handleClose);
+                })
                 ;
 
     }

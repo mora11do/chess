@@ -11,9 +11,11 @@ import models.User;
 public class PreLoginREPL {
     private final ServerFacade server;
     private Auth auth = null;
+    private final Integer port;
 
     public PreLoginREPL(int port) throws ResponseException {
         server = new ServerFacade(port);
+        this.port = port;
     }
 
     public void run() {
@@ -60,7 +62,7 @@ public class PreLoginREPL {
         if (params.length >= 2) {
             this.auth = server.login(new User(params[0],params[1],"fakeEmail"));
             System.out.println(String.format("You signed in as %s.", params[0]));
-            new PostLoginREPL(server, auth).run();
+            new PostLoginREPL(server, auth, port).run();
             return "";
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <yourname> <yourpassword>");
@@ -70,7 +72,7 @@ public class PreLoginREPL {
         if (params.length >= 3) {
             this.auth = server.register(new User(params[0],params[1],params[2]));
             System.out.println(String.format("You are now registered and signed in as %s.", params[0]));
-            new PostLoginREPL(server, auth).run();
+            new PostLoginREPL(server, auth, port).run();
             return "";
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <yourName> <yourPassword> <yourEmail>");

@@ -8,17 +8,28 @@ import chess.ChessPiece;
 import chess.ChessPosition;
 import client.ResponseException;
 import client.ServerFacade;
+import client.websocket.NotificationHandler;
+import client.websocket.WebSocketFacade;
 import models.Auth;
+import websocket.messages.ErrorMessage;
+import websocket.messages.LoadGameMessage;
+import websocket.messages.NotificationMessage;
+import websocket.messages.ServerMessage;
 
-public class GameplayREPL {
+public class GameplayREPL implements NotificationHandler {
     private final ServerFacade server;
     private final String playerColor;
     private ChessGame game;
+    private final Integer port;
+    private WebSocketFacade ws;
 
-    public GameplayREPL(ServerFacade server, String playerColor, ChessGame game) throws ResponseException {
+    public GameplayREPL(ServerFacade server, String playerColor, ChessGame game,
+                        Integer gameID, String authToken, Integer port) throws ResponseException {
         this.server = server;
         this.playerColor = playerColor;
         this.game = game;
+        this.port = port;
+        this.ws = new WebSocketFacade("http://localhost"+ port.toString(), this, authToken,gameID);
     }
 
     public void run() {
@@ -183,5 +194,30 @@ public class GameplayREPL {
             printBlackLetterRow();
         }
         System.out.print(EscapeSequences.SET_BG_COLOR_BLACK + EscapeSequences.SET_TEXT_COLOR_WHITE);
+    }
+
+    public void notify(ServerMessage message){
+        switch (message.getServerMessageType()){
+            case LOAD_GAME -> loadGame(message);
+            case NOTIFICATION -> notification(message);
+            case ERROR -> error(message);
+        }
+    }
+
+    public void loadGame(ServerMessage message){
+        LoadGameMessage loadGameMessage = (LoadGameMessage) message;
+        this.game = loadGameMessage.getGame();
+        drawBoard();
+    }
+
+    public void notification(ServerMessage message){
+        NotificationMessage notificationMessage = (NotificationMessage) message;
+        System.out.println(notificationMessage.getMessage());
+
+    }
+
+    public void error(ServerMessage message){
+        ErrorMessage errorMessage = (ErrorMessage) message;
+        System.out.println(errorMessage.getErrorMessage());
     }
 }

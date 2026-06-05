@@ -7,6 +7,7 @@ import java.util.Scanner;
 import chess.ChessGame;
 import client.ResponseException;
 import client.ServerFacade;
+import client.websocket.NotificationHandler;
 import models.Auth;
 import models.GameWithNoChessGame;
 
@@ -14,10 +15,12 @@ public class PostLoginREPL {
     private final ServerFacade server;
     private final Auth auth;
     private ArrayList<GameWithNoChessGame> games;
-    public PostLoginREPL(ServerFacade server, Auth auth) throws ResponseException {
+    private final Integer port;
+    public PostLoginREPL(ServerFacade server, Auth auth, Integer port) throws ResponseException {
         this.server = server;
         this.auth = auth;
         this.games = server.list(auth);
+        this.port = port;
     }
 
     public void run() {
@@ -111,7 +114,7 @@ public class PostLoginREPL {
             int gameID = gameTheyWant.gameID();
             String playerColor = params[1];
             server.join(auth, gameID, playerColor);
-            new GameplayREPL(server, playerColor, new ChessGame()).run();
+            new GameplayREPL(server, playerColor, new ChessGame(),gameID, auth.authToken(), port).run();
             return "";
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <gameNumber> <teamColor>");
@@ -121,7 +124,7 @@ public class PostLoginREPL {
         if (params.length >= 1) {
             makeSureGameExistsBeforeJoinOrObserve(params[0]);
             System.out.println("You are observing a game.");
-            new GameplayREPL(server, "WHITE", new ChessGame()).run();
+//            new GameplayREPL(server, "WHITE", new ChessGame(), port).run();
             return "";
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <gameNumber>");
