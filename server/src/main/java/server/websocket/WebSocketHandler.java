@@ -1,6 +1,8 @@
 package server.websocket;
 
 import chess.ChessGame;
+import chess.ChessMove;
+import chess.InvalidMoveException;
 import com.google.gson.Gson;
 import dataaccess.AuthDAO;
 import dataaccess.GameDAO;
@@ -13,6 +15,7 @@ import io.javalin.websocket.WsMessageHandler;
 import models.Game;
 import models.User;
 import org.eclipse.jetty.websocket.api.Session;
+import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
 import websocket.messages.LoadGameMessage;
 import websocket.messages.NotificationMessage;
@@ -37,7 +40,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     }
 
     @Override
-    public void handleMessage(WsMessageContext ctx) {
+    public void handleMessage(WsMessageContext ctx) throws InvalidMoveException{
         try {
             UserGameCommand command = new Gson().fromJson(ctx.message(), UserGameCommand.class);
             Integer gameID = command.getGameID();
@@ -45,7 +48,11 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             Session session = ctx.session;
             switch (command.getCommandType()) {
                 case CONNECT -> connect(gameID, username, session);
-//                case MAKE_MOVE -> exit(action.visitorName(), ctx.session);
+                case MAKE_MOVE -> {
+                    MakeMoveCommand moveCommand = new Gson().fromJson(ctx.message(), MakeMoveCommand.class);
+                    var move = moveCommand.getMove();
+                    makeMove(gameID, session, move);
+                }
                 case LEAVE -> leave(gameID,username,session);
 //                case RESIGN ->
             }
@@ -81,6 +88,43 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         connections.broadcast(session, notification, gameID);
     }
 
+    private void makeMove(Integer gameID, Session session, ChessMove move)
+            throws IOException, InvalidMoveException {
+        var gameData = gameDAO.getGame(gameID);
+        var game = gameData.game();
+        var dummyGameJustForGameIDToBeAccurate = new Game(gameID,"FAKE","FAKE","FAKE",null);
+        game.makeMove(move);
+        gameDAO.updateGame(dummyGameJustForGameIDToBeAccurate, gameData);
+        LoadGameMessage loadGameMessage = new LoadGameMessage(game);
+        connections.broadcast(null, loadGameMessage,gameID);
+        var message = String.format("%s has moved to %s", move.getStartPosition().toString(), move.getEndPosition().toString());
+        NotificationMessage moveNotification = new NotificationMessage(message);
+        connections.broadcast(session,moveNotification, gameID);
+        String checkMessage = "NONE";
+        if (game.isInCheckmate(ChessGame.TeamColor.WHITE)){
+            checkMessage = "BLACK WINS (white is in checkmate)";
+        }
+        else if (game.isInCheckmate(ChessGame.TeamColor.BLACK)){
+            checkMessage = "WHITE WINS (black is in checkmate)";
+        }
+        else if (game.isInCheck(ChessGame.TeamColor.WHITE)){
+            checkMessage = "White is in check!";
+        }
+        else if (game.isInCheck(ChessGame.TeamColor.BLACK)) {
+            checkMessage = "Black is in check!";
+        }
+        else if (game.isInStalemate(ChessGame.TeamColor.WHITE)) {
+            checkMessage = "White is in stalemate!";
+        }
+        else if (game.isInStalemate(ChessGame.TeamColor.BLACK)) {
+            checkMessage = "Black is in stalemate!";
+        }
+        if (!checkMessage.equals("NONE")){
+            NotificationMessage notificationMessage = new NotificationMessage(checkMessage);
+            connections.broadcast(null, notificationMessage, gameID);
+        }
+    }
+
     private void leave(Integer gameID, String username, Session session) throws IOException{
         connections.remove(gameID, session);
         var oldGame = gameDAO.getGame(gameID);
@@ -98,14 +142,4 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         var notification = new NotificationMessage(message);
         connections.broadcast(session, notification, gameID);
     }
-//
-//    public void makeNoise(String petName, String sound) throws ResponseException {
-//        try {
-//            var message = String.format("%s says %s", petName, sound);
-//            var notification = new Notification(Notification.Type.NOISE, message);
-//            connections.broadcast(null, notification);
-//        } catch (Exception ex) {
-//            throw new ResponseException(ResponseException.Code.ServerError, ex.getMessage());
-//        }
-//    }
 }
