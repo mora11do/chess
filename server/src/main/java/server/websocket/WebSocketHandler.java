@@ -62,7 +62,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                     MakeMoveCommand moveCommand = new Gson().fromJson(ctx.message(), MakeMoveCommand.class);
                     var move = moveCommand.getMove();
                     try {
-                        makeMove(gameID, session, move);
+                        makeMove(gameID, session, move, username);
                     } catch (InvalidMoveException e) {
                         connections.broadcastToOne(session, new ErrorMessage("Error: Invalid move"));
                     }
@@ -102,7 +102,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         connections.broadcast(session, notification, gameID);
     }
 
-    private void makeMove(Integer gameID, Session session, ChessMove move)
+    private void makeMove(Integer gameID, Session session, ChessMove move, String username)
             throws IOException, InvalidMoveException {
         System.out.println("GameID: " + gameID + " Move: " + move);
         var gameData = gameDAO.getGame(gameID);
@@ -110,7 +110,22 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             connections.broadcastToOne(session, new ErrorMessage("Error: The game is already over, you can't move"));
             return;
         }
+        String playerColor = null;
+        if (username.equals(gameData.whiteUsername())){
+            playerColor = "WHITE";
+        }
+        else if (username.equals(gameData.blackUsername())){
+            playerColor = "BLACK";
+        }
+        else{
+            connections.broadcastToOne(session, new ErrorMessage("Error: Observers can't make moves"));
+            return;
+        }
         var game = gameData.game();
+        if (!playerColor.equals(game.getTeamTurn().toString())){
+            connections.broadcastToOne(session, new ErrorMessage("Error: It's not your turn, you sly dog"));
+            return;
+        }
         var dummyGameJustForGameIDToBeAccurate = new Game(gameID,"FAKE","FAKE","FAKE",null, false);
         System.out.println("Piece at start: " + game.getBoard().getPiece(move.getStartPosition()));
         System.out.println("Team turn before move: " + game.getTeamTurn());
