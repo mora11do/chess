@@ -67,7 +67,7 @@ public class GameplayREPL implements NotificationHandler {
             String cmd = (tokens.length > 0) ? tokens[0] : "help";
             String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
             return switch (cmd) {
-//                case "resign" -> resign();
+                case "resign" -> resign();
                 case "move" -> move(params);
                 case "help" -> help();
                 case "leave" -> leave();
