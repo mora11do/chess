@@ -12,11 +12,13 @@ import io.javalin.websocket.WsConnectContext;
 import io.javalin.websocket.WsConnectHandler;
 import io.javalin.websocket.WsMessageContext;
 import io.javalin.websocket.WsMessageHandler;
+import models.Auth;
 import models.Game;
 import models.User;
 import org.eclipse.jetty.websocket.api.Session;
 import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
+import websocket.messages.ErrorMessage;
 import websocket.messages.LoadGameMessage;
 import websocket.messages.NotificationMessage;
 import websocket.messages.ServerMessage;
@@ -40,21 +42,33 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     }
 
     @Override
-    public void handleMessage(WsMessageContext ctx) throws InvalidMoveException{
+    public void handleMessage(WsMessageContext ctx) {
         try {
+            System.out.println("handleMessage called");
             UserGameCommand command = new Gson().fromJson(ctx.message(), UserGameCommand.class);
+            System.out.println("Command type: " + command.getCommandType());
             Integer gameID = command.getGameID();
-            String username = authDAO.getAuth(command.getAuthToken()).username();
+            Auth auth = authDAO.getAuth(command.getAuthToken());
             Session session = ctx.session;
+            if (auth == null) {
+                connections.broadcastToOne(session, new ErrorMessage("Error: Unauthorized"));
+                return;
+            }
+            String username = auth.username();
             switch (command.getCommandType()) {
                 case CONNECT -> connect(gameID, username, session);
                 case MAKE_MOVE -> {
+                    System.out.println("MAKE_MOVE CASE IN SERVER");
                     MakeMoveCommand moveCommand = new Gson().fromJson(ctx.message(), MakeMoveCommand.class);
                     var move = moveCommand.getMove();
-                    makeMove(gameID, session, move);
+                    try {
+                        makeMove(gameID, session, move);
+                    } catch (InvalidMoveException e) {
+                        connections.broadcastToOne(session, new ErrorMessage("Error: Invalid move"));
+                    }
                 }
                 case LEAVE -> leave(gameID,username,session);
-//                case RESIGN ->
+                case RESIGN -> resign(gameID, username, session);
             }
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -90,10 +104,18 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
     private void makeMove(Integer gameID, Session session, ChessMove move)
             throws IOException, InvalidMoveException {
+        System.out.println("GameID: " + gameID + " Move: " + move);
         var gameData = gameDAO.getGame(gameID);
+        if (gameData.isOver()){
+            connections.broadcastToOne(session, new ErrorMessage("Error: The game is already over, you can't move"));
+            return;
+        }
         var game = gameData.game();
-        var dummyGameJustForGameIDToBeAccurate = new Game(gameID,"FAKE","FAKE","FAKE",null);
+        var dummyGameJustForGameIDToBeAccurate = new Game(gameID,"FAKE","FAKE","FAKE",null, false);
+        System.out.println("Piece at start: " + game.getBoard().getPiece(move.getStartPosition()));
+        System.out.println("Team turn before move: " + game.getTeamTurn());
         game.makeMove(move);
+        System.out.println("Team turn after move: " + game.getTeamTurn());
         gameDAO.updateGame(dummyGameJustForGameIDToBeAccurate, gameData);
         LoadGameMessage loadGameMessage = new LoadGameMessage(game);
         connections.broadcast(null, loadGameMessage,gameID);
@@ -131,11 +153,11 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         Game newGame;
         if (username.equals(gameDAO.getGame(gameID).whiteUsername())) {
             newGame = new Game(gameID,null,
-                    oldGame.blackUsername(), oldGame.gameName(), oldGame.game());
+                    oldGame.blackUsername(), oldGame.gameName(), oldGame.game(), oldGame.isOver());
         }
         else{
             newGame = new Game(gameID,oldGame.whiteUsername(),
-                    null, oldGame.gameName(), oldGame.game());
+                    null, oldGame.gameName(), oldGame.game(), oldGame.isOver());
         }
         gameDAO.updateGame(oldGame, newGame);
         var message = String.format("%s has left to the game", username);
@@ -143,7 +165,11 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         connections.broadcast(session, notification, gameID);
     }
 
-//    private void resign(Integer gameID, String username, Session session){
-//        connections
-//    }
+    private void resign(Integer gameID, String username, Session session) throws IOException{
+        Game oldGame = gameDAO.getGame(gameID);
+        Game newGame = new Game(gameID, oldGame.whiteUsername(),
+                oldGame.blackUsername(), oldGame.gameName(), oldGame.game(), true);
+        gameDAO.updateGame(oldGame, newGame);
+        connections.broadcast(null, new NotificationMessage(username + " has resigned!"),gameID);
+    }
 }

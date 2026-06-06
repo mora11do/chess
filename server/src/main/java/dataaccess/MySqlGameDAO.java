@@ -20,10 +20,10 @@ public class MySqlGameDAO extends GenericSqlDAO implements GameDAO{
     @Override
     public int createGame(String gameName) {
         try {
-            var statement = "INSERT INTO games (whiteUsername, blackUsername, gameName, jsonGame) VALUES (?, ?, ?, ?)";
+            var statement = "INSERT INTO games (whiteUsername, blackUsername, gameName, jsonGame, isOver) VALUES (?, ?, ?, ?, ?)";
             String json = new Gson().toJson(new ChessGame());
             int gameID = executeUpdate(statement, null, null,
-                    gameName, json);
+                    gameName, json, false);
             return gameID;
         }
         catch (Exception e) {
@@ -35,7 +35,7 @@ public class MySqlGameDAO extends GenericSqlDAO implements GameDAO{
     @Override
     public Game getGame(String gameName) throws DataAccessSQLException{
         try (Connection conn = DatabaseManager.getConnection()) {
-            var statement = "SELECT gameID, whiteUsername, blackUsername, gameName, jsonGame FROM games WHERE gameName=?";
+            var statement = "SELECT gameID, whiteUsername, blackUsername, gameName, jsonGame, isOver FROM games WHERE gameName=?";
             try (PreparedStatement ps = conn.prepareStatement(statement)) {
                 ps.setString(1, gameName);
                 try (ResultSet rs = ps.executeQuery()) {
@@ -45,7 +45,7 @@ public class MySqlGameDAO extends GenericSqlDAO implements GameDAO{
                 }
             }
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            e.printStackTrace();
             throw new DataAccessSQLException("Error: getGame SQL failed", 500);
         }
         return null;
@@ -54,7 +54,7 @@ public class MySqlGameDAO extends GenericSqlDAO implements GameDAO{
     @Override
     public Game getGame(int gameID) throws DataAccessSQLException{
         try (Connection conn = DatabaseManager.getConnection()) {
-            var statement = "SELECT gameID, whiteUsername, blackUsername, gameName, jsonGame FROM games WHERE gameID=?";
+            var statement = "SELECT gameID, whiteUsername, blackUsername, gameName, jsonGame, isOver FROM games WHERE gameID=?";
             try (PreparedStatement ps = conn.prepareStatement(statement)) {
                 ps.setInt(1, gameID);
                 try (ResultSet rs = ps.executeQuery()) {
@@ -91,9 +91,9 @@ public class MySqlGameDAO extends GenericSqlDAO implements GameDAO{
     @Override
     public void updateGame(Game oldGame, Game newGame) throws DataAccessSQLException{
         try (Connection conn = DatabaseManager.getConnection()) {
-            var statement = "UPDATE games SET whiteUsername = ?, blackUsername = ?, jsonGame = ? WHERE gameID = ?";
-            var json = new Gson().toJson(newGame);
-            executeUpdate(statement, newGame.whiteUsername(), newGame.blackUsername(), json, oldGame.gameID());
+            var statement = "UPDATE games SET whiteUsername = ?, blackUsername = ?, jsonGame = ?, isOver = ? WHERE gameID = ?";
+            var json = new Gson().toJson(newGame.game());
+            executeUpdate(statement, newGame.whiteUsername(), newGame.blackUsername(), json, newGame.isOver(),oldGame.gameID());
         } catch (Exception e) {
             throw new DataAccessSQLException("Error: updateGame failed", 500);
         }
@@ -110,8 +110,9 @@ public class MySqlGameDAO extends GenericSqlDAO implements GameDAO{
         var blackUsername = rs.getString("blackUsername");
         var gameName = rs.getString("gameName");
         var jsonGame = rs.getString("jsonGame");
+        var isOver = rs.getBoolean("isOver");
         ChessGame chessGame = new Gson().fromJson(jsonGame, ChessGame.class);
-        return new Game(gameID, whiteUsername, blackUsername, gameName, chessGame);
+        return new Game(gameID, whiteUsername, blackUsername, gameName, chessGame,isOver);
     }
 
     protected final String[] getCreateStatements(){
@@ -122,6 +123,7 @@ public class MySqlGameDAO extends GenericSqlDAO implements GameDAO{
           `blackUsername` VARCHAR(256) DEFAULT NULL,
           `gameName` VARCHAR(256) NOT NULL,
           `jsonGame` TEXT NOT NULL,
+          `isOver` BOOLEAN DEFAULT FALSE,
           PRIMARY KEY (`gameID`)
         )
         """

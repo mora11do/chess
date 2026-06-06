@@ -40,6 +40,9 @@ public abstract class GenericSqlDAO {
                     else if (param instanceof Integer p) {
                         ps.setInt(i + 1, p);
                     }
+                    else if (param instanceof Boolean p) {
+                        ps.setBoolean(i+1,p);
+                    }
                     else if (param == null) {
                         ps.setNull(i + 1, NULL);
                     }
@@ -70,6 +73,10 @@ public abstract class GenericSqlDAO {
                     preparedStatement.executeUpdate();
                 }
             }
+            try (var ps = conn.prepareStatement(
+                    "ALTER TABLE games ADD COLUMN IF NOT EXISTS `isOver` BOOLEAN DEFAULT FALSE")) {
+                ps.executeUpdate();
+            } catch (SQLException ignored) {}
         } catch (SQLException ex) {
             System.out.println("SQL error: " + ex.getMessage());
             throw new DataAccessException("Error: Unable to configure database, this is inside configureDatabase", 500);

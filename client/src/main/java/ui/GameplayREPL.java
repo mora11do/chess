@@ -1,11 +1,10 @@
 package ui;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Scanner;
 
-import chess.ChessGame;
-import chess.ChessPiece;
-import chess.ChessPosition;
+import chess.*;
 import client.ResponseException;
 import client.ServerFacade;
 import client.websocket.NotificationHandler;
@@ -29,7 +28,12 @@ public class GameplayREPL implements NotificationHandler {
         this.playerColor = playerColor;
         this.game = game;
         this.port = port;
-        this.ws = new WebSocketFacade("http://localhost"+ port.toString(), this, authToken,gameID);
+        this.ws = new WebSocketFacade("http://localhost:"+ port.toString(), this, authToken,gameID);
+        try{
+            ws.connectToGame();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void run() {
@@ -41,8 +45,6 @@ public class GameplayREPL implements NotificationHandler {
         while (!result.equals("leave")) {
             String line = scanner.nextLine();
             if (!line.equals("leave")) {
-                drawBoard();
-
                 try {
                     result = eval(line);
                     System.out.println(result);
@@ -59,37 +61,89 @@ public class GameplayREPL implements NotificationHandler {
     }
 
 
-    public String eval(String input) {
+    public String eval(String input) throws IOException, ResponseException{
+        try {
             String[] tokens = input.toLowerCase().split(" ");
             String cmd = (tokens.length > 0) ? tokens[0] : "help";
             String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
             return switch (cmd) {
+//                case "resign" -> resign();
+                case "move" -> move(params);
                 case "help" -> help();
                 case "leave" -> leave();
+
                 default -> "Unknown command. Available commands:\n" + help();
             };
+        } catch (ResponseException ex) {
+        return ex.getMessage();
+    }
     }
 
     public String help() {
         return """
-                - leave (WARNING: If you leave, you can't rejoin this game!)
+                - move <start position> <end position> <promotion piece>
+                - leave
+                - resign
                 - help
                 """;
     }
 
-    public String leave(){
-
+    public String leave() throws IOException{
+        ws.leaveGame();
         return "leave";
+    }
+
+    public ChessPosition easyChessPosition(String letterNumber){
+        int col = Character.getNumericValue(letterNumber.charAt(0)) - Character.getNumericValue('a') + 1;
+        int row = Character.getNumericValue(letterNumber.charAt(1));
+        return new ChessPosition(row,col);
+    }
+
+    public ChessMove easyChessMove(String letterNumberStart, String letterNumberEnd, String promoPieceType)
+            throws InvalidMoveException{
+        ChessPosition startPosition = easyChessPosition(letterNumberStart);
+        ChessPosition endPosition = easyChessPosition(letterNumberEnd);
+        ChessPiece.PieceType promo;
+        switch (promoPieceType){
+            case "bishop" -> promo = ChessPiece.PieceType.BISHOP;
+            case "knight" -> promo = ChessPiece.PieceType.KNIGHT;
+            case "rook" -> promo = ChessPiece.PieceType.ROOK;
+            case "queen" -> promo = ChessPiece.PieceType.QUEEN;
+            default -> throw new InvalidMoveException("Error: Invalid promotion piece");
+        }
+        return new ChessMove(startPosition, endPosition, promo);
+    }
+
+    public String move(String... params) throws IOException, ResponseException{
+        if (params.length == 2){
+            ws.makeMove(new ChessMove(easyChessPosition(params[0]),easyChessPosition(params[1]),null));
+        }
+        else if (params.length == 3){
+            try{
+        ws.makeMove(easyChessMove(params[0], params[1], params[2]));
+        } catch (InvalidMoveException e) {
+                throw new ResponseException(ResponseException.Code.ClientError, "Error: invalid promotion piece");
+            }
+        }
+        else{
+            throw new ResponseException(ResponseException.Code.ClientError, "Expected: <startPosition> <endPosition> <optionalPromotionPiece>");
+        }
+        return "";
+    }
+
+    public String resign() throws IOException {
+        ws.resign();
+        return "Resigned from the game";
     }
 
     public void print(ChessGame.TeamColor teamColor, ChessPiece.PieceType pieceType){
         String stringPieceType;
         String stringTeamColor;
         if (teamColor == ChessGame.TeamColor.WHITE){
-            stringTeamColor = EscapeSequences.SET_TEXT_COLOR_BLACK;
+            stringTeamColor = EscapeSequences.SET_TEXT_COLOR_WHITE;
         }
         else{
-            stringTeamColor = EscapeSequences.SET_TEXT_COLOR_WHITE;
+            stringTeamColor = EscapeSequences.SET_TEXT_COLOR_BLACK;
         }
 
         if (pieceType == ChessPiece.PieceType.PAWN){
@@ -165,10 +219,10 @@ public class GameplayREPL implements NotificationHandler {
                 for (int col = 1; col<9; col++) {
                     ChessPiece piece;
                     if (playerColor.equals("WHITE") || playerColor.equals("white")) {
-                        piece = game.getBoard().getPiece(new ChessPosition(row, col));
+                        piece = game.getBoard().getPiece(new ChessPosition(9-row, col));
                     }
                     else{
-                        piece = game.getBoard().getPiece(new ChessPosition(9-row, 9-col));
+                        piece = game.getBoard().getPiece(new ChessPosition(row, 9-col));
                     }
                     setWhiteBGColor(row, col);
                     if (piece == null){

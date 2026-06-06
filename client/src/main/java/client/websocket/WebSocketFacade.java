@@ -29,10 +29,13 @@ public class WebSocketFacade extends Endpoint {
         try {
             url = url.replace("http", "ws");
             URI socketURI = new URI(url + "/ws");
+            System.out.println("Connecting to: " + url + "/ws");
             this.notificationHandler = notificationHandler;
 
             WebSocketContainer container = ContainerProvider.getWebSocketContainer();
             this.session = container.connectToServer(this, socketURI);
+
+            System.out.println("Connected to server: " + this.session.isOpen());
 
             //set message handler
             this.session.addMessageHandler(new MessageHandler.Whole<String>() {
@@ -72,6 +75,12 @@ public class WebSocketFacade extends Endpoint {
 
     public void makeMove(ChessMove move) throws IOException{
         var makeMoveCommand = new MakeMoveCommand(move, authToken, gameID);
+        System.out.println("Sending: " + new Gson().toJson(makeMoveCommand));
         this.session.getBasicRemote().sendText(new Gson().toJson(makeMoveCommand));
+    }
+
+    public void resign() throws IOException{
+        var userGameCommand = new UserGameCommand(UserGameCommand.CommandType.RESIGN, authToken, gameID);
+        this.session.getBasicRemote().sendText(new Gson().toJson(userGameCommand));
     }
 }
