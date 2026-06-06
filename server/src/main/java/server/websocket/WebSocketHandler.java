@@ -182,6 +182,10 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
     private void resign(Integer gameID, String username, Session session) throws IOException{
         Game oldGame = gameDAO.getGame(gameID);
+        if (oldGame.isOver()){
+            connections.broadcastToOne(session, new ErrorMessage("Error: The game is already over"));
+            return;
+        }
         Game newGame = new Game(gameID, oldGame.whiteUsername(),
                 oldGame.blackUsername(), oldGame.gameName(), oldGame.game(), true);
         gameDAO.updateGame(oldGame, newGame);
