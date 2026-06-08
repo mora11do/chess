@@ -114,7 +114,7 @@ public class PostLoginREPL {
             int gameID = gameTheyWant.gameID();
             String playerColor = params[1];
             server.join(auth, gameID, playerColor);
-            new GameplayREPL(server, playerColor, new ChessGame(),gameID, auth.authToken(), port).run();
+            new GameplayREPL(server, playerColor, new ChessGame(),gameID, auth.authToken(), port, false).run();
             return "";
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <gameNumber> <teamColor>");
@@ -124,7 +124,7 @@ public class PostLoginREPL {
         if (params.length >= 1) {
             makeSureGameExistsBeforeJoinOrObserve(params[0]);
             System.out.println("You are observing a game.");
-//            new GameplayREPL(server, "WHITE", new ChessGame(), port).run();
+            new GameplayREPL(server, "WHITE", new ChessGame(), port, auth.authToken(), port,true).run();
             return "";
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <gameNumber>");

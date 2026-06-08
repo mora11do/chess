@@ -5,12 +5,14 @@ import java.util.ArrayList;
 public class MovementCalculator {
     private final ChessBoard board;
     private final ChessPosition myPosition;
-    private final ArrayList<ChessMove> moveList;
+    private ArrayList<ChessMove> moveList;
+    private ArrayList<ChessMove> moveList2;
 
     public MovementCalculator(ChessBoard board, ChessPosition myPosition) {
         this.board = board;
         this.myPosition = myPosition;
         this.moveList = new ArrayList<>();
+        this.moveList2 = new ArrayList<>();
     }
 
     /**
@@ -74,6 +76,19 @@ public class MovementCalculator {
         for (int[] direction: directions) {
             addToMoveListIfValid(direction);
         }
+        return moveList;
+    }
+
+    public ArrayList<ChessMove> calculateQueen(){
+        moveList.addAll(rookBishopMovementLooper("positive", "row", "rook"));
+        moveList.addAll(rookBishopMovementLooper("positive", "col", "rook"));
+        moveList.addAll(rookBishopMovementLooper("negative", "row", "rook"));
+        moveList.addAll(rookBishopMovementLooper("negative", "col", "rook"));
+        moveList2.addAll(rookBishopMovementLooper("positive", "row", "bishop"));
+        moveList2.addAll(rookBishopMovementLooper("positive", "col", "bishop"));
+        moveList2.addAll(rookBishopMovementLooper("negative", "row", "bishop"));
+        moveList2.addAll(rookBishopMovementLooper("negative", "col", "bishop"));
+        moveList.addAll(moveList2);
         return moveList;
     }
 

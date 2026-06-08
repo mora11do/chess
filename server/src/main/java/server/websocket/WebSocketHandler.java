@@ -84,6 +84,11 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     private void connect(Integer gameID, String username, Session session) throws IOException{
         connections.add(gameID, session);
         Game gameData = gameDAO.getGame(gameID);
+        if (gameData == null){
+            System.out.print("GameData is null for some reason: "+gameData);
+            connections.broadcastToOne(session, new ErrorMessage(""));
+            return;
+        }
         ChessGame game = gameData.game();
         LoadGameMessage loadGameMessage = new LoadGameMessage(game);
         connections.broadcastToOne(session, loadGameMessage);
@@ -170,9 +175,12 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             newGame = new Game(gameID,null,
                     oldGame.blackUsername(), oldGame.gameName(), oldGame.game(), oldGame.isOver());
         }
-        else{
+        else if (username.equals(gameDAO.getGame(gameID).blackUsername())){
             newGame = new Game(gameID,oldGame.whiteUsername(),
                     null, oldGame.gameName(), oldGame.game(), oldGame.isOver());
+        }
+        else{
+            newGame = oldGame;
         }
         gameDAO.updateGame(oldGame, newGame);
         var message = String.format("%s has left to the game", username);
@@ -182,6 +190,10 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
     private void resign(Integer gameID, String username, Session session) throws IOException{
         Game oldGame = gameDAO.getGame(gameID);
+        if (!username.equals(gameDAO.getGame(gameID).whiteUsername()) && !username.equals(gameDAO.getGame(gameID).blackUsername())){
+            connections.broadcastToOne(session, new ErrorMessage("Error: You can't resign because you're an observer"));
+            return;
+        }
         if (oldGame.isOver()){
             connections.broadcastToOne(session, new ErrorMessage("Error: The game is already over"));
             return;

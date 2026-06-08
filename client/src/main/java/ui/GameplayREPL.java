@@ -1,6 +1,7 @@
 package ui;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
 
@@ -21,14 +22,16 @@ public class GameplayREPL implements NotificationHandler {
     private ChessGame game;
     private final Integer port;
     private WebSocketFacade ws;
+    private final boolean isObserver;
 
     public GameplayREPL(ServerFacade server, String playerColor, ChessGame game,
-                        Integer gameID, String authToken, Integer port) throws ResponseException {
+                        Integer gameID, String authToken, Integer port, boolean isObserver) throws ResponseException {
         this.server = server;
         this.playerColor = playerColor;
         this.game = game;
         this.port = port;
         this.ws = new WebSocketFacade("http://localhost:"+ port.toString(), this, authToken,gameID);
+        this.isObserver = isObserver;
         try{
             ws.connectToGame();
         } catch (IOException e) {
@@ -37,7 +40,6 @@ public class GameplayREPL implements NotificationHandler {
     }
 
     public void run() {
-        drawBoard();
         System.out.print(help());
 
         Scanner scanner = new Scanner(System.in);
@@ -71,6 +73,8 @@ public class GameplayREPL implements NotificationHandler {
                 case "move" -> move(params);
                 case "help" -> help();
                 case "leave" -> leave();
+                case "redraw" -> redraw();
+                case "highlight" -> displayLegalMoves(params);
 
                 default -> "Unknown command. Available commands:\n" + help();
             };
@@ -79,11 +83,41 @@ public class GameplayREPL implements NotificationHandler {
     }
     }
 
+    public String displayLegalMoves(String... params) throws ResponseException{
+        if (params.length==1) {
+            try {
+                ChessBoard board = game.getBoard();
+                ChessPosition position = easyChessPosition(params[0]);
+                MovementCalculator calculator = new MovementCalculator(board, position);
+                ChessPiece.PieceType pieceType = board.getPiece(position).getPieceType();
+                ArrayList<ChessMove> legalMoves;
+                switch (pieceType) {
+                    case PAWN -> legalMoves = calculator.calculatePawn();
+                    case KING -> legalMoves = calculator.calculateKing();
+                    case ROOK -> legalMoves = calculator.calculateRook();
+                    case QUEEN -> legalMoves = calculator.calculateQueen();
+                    case KNIGHT -> legalMoves = calculator.calculateKnight();
+                    case BISHOP -> legalMoves = calculator.calculateBishop();
+                    default -> legalMoves = new ArrayList<ChessMove>();
+                }
+                drawBoard(legalMoves);
+                return "";
+            }catch(IndexOutOfBoundsException e) {
+                throw new ResponseException(ResponseException.Code.ClientError, "Error: invalid input. Expected: highlight <piece position>");
+            }
+        }
+        else{
+            throw new ResponseException(ResponseException.Code.ClientError, "Error: invalid input. Expected: highlight <piece position>");
+        }
+    }
+
     public String help() {
         return """
-                - move <start position> <end position> <promotion piece>
+                - move <start position> <end position> <optional promotion piece for pawns>
                 - leave
                 - resign
+                - redraw
+                - highlight <piece position>
                 - help
                 """;
     }
@@ -115,14 +149,23 @@ public class GameplayREPL implements NotificationHandler {
     }
 
     public String move(String... params) throws IOException, ResponseException{
+        if (isObserver){
+            throw new ResponseException(ResponseException.Code.ClientError, "Error: You're a nerd and an observer, you can't move");
+        }
         if (params.length == 2){
-            ws.makeMove(new ChessMove(easyChessPosition(params[0]),easyChessPosition(params[1]),null));
+            try {
+                ws.makeMove(new ChessMove(easyChessPosition(params[0]), easyChessPosition(params[1]), null));
+            } catch (StringIndexOutOfBoundsException e){
+                throw new ResponseException(ResponseException.Code.ClientError, "Error: invalid input (example: move a2 a3)");
+            }
         }
         else if (params.length == 3){
             try{
-        ws.makeMove(easyChessMove(params[0], params[1], params[2]));
+                ws.makeMove(easyChessMove(params[0], params[1], params[2]));
         } catch (InvalidMoveException e) {
                 throw new ResponseException(ResponseException.Code.ClientError, "Error: invalid promotion piece");
+            }catch(Exception e){
+                throw new ResponseException(ResponseException.Code.ClientError, "Error: invalid input");
             }
         }
         else{
@@ -131,7 +174,10 @@ public class GameplayREPL implements NotificationHandler {
         return "";
     }
 
-    public String resign() throws IOException {
+    public String resign() throws IOException, ResponseException {
+        if (isObserver){
+            throw new ResponseException(ResponseException.Code.ClientError, "Error: You're can't resign if you're an observer");
+        }
         ws.resign();
         return "Resigned from the game";
     }
@@ -180,6 +226,10 @@ public class GameplayREPL implements NotificationHandler {
         }
     }
 
+    public void setHighlightBGColor(){
+        System.out.print(EscapeSequences.SET_BG_COLOR_RED);
+    }
+
     public void printWhiteLetterRow(){
         System.out.print(EscapeSequences.SET_BG_COLOR_BLUE + EscapeSequences.SET_TEXT_COLOR_BLACK);
         System.out.print("    a  b  c  d  e  f  g  h    ");
@@ -202,7 +252,16 @@ public class GameplayREPL implements NotificationHandler {
         System.out.print(" "+(row)+" ");
     }
 
+    public String redraw(){
+        drawBoard();
+        return"";
+    }
+
     public void drawBoard(){
+        drawBoard(null);
+    }
+
+    public void drawBoard(ArrayList<ChessMove> placesToHighlight){
         if (playerColor.equals("WHITE") || playerColor.equals("white")) {
             printWhiteLetterRow();
         }
@@ -225,6 +284,21 @@ public class GameplayREPL implements NotificationHandler {
                         piece = game.getBoard().getPiece(new ChessPosition(row, 9-col));
                     }
                     setWhiteBGColor(row, col);
+                    if (!(placesToHighlight==null)){
+                        for (var move:placesToHighlight) {
+                            ChessPosition legalMove = move.getEndPosition();
+                            if (playerColor.equals("WHITE") || playerColor.equals("white")) {
+                                if (legalMove.getColumn() == col && legalMove.getRow() == 9-row) {
+                                    setHighlightBGColor();
+                                }
+                            }
+                            else{
+                                if (legalMove.getColumn() == 9-col && legalMove.getRow() == row) {
+                                    setHighlightBGColor();
+                                }
+                            }
+                        }
+                    }
                     if (piece == null){
                         System.out.print(EscapeSequences.EMPTY);
                     }
