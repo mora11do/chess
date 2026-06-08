@@ -33,20 +33,6 @@ public class Server {
                 .post("/game", createHandler::create)
                 .put("/game", joinHandler::join)
                 .delete("/db", clearHandler::clear)
-//                .ws("/ws", ws -> {
-//                    System.out.println("WebSocket route registered");
-//                    ws.onConnect(webSocketHandler::handleConnect);
-//                            ws.onMessage(webSocketHandler::handleMessage);
-//                    ws.onClose(webSocketHandler::handleClose);
-//                })
-//                .ws("/ws", ws -> {
-//                    ws.onConnect(ctx -> {
-//                        System.out.println("Client connected!");
-//                        ctx.enableAutomaticPings();
-//                    });
-//                    ws.onMessage(ctx -> System.out.println("Message received: " + ctx.message()));
-//                    ws.onClose(ctx -> System.out.println("Client disconnected"));
-//                })
                 .ws("/ws", ws -> {
                     ws.onConnect(webSocketHandler);
                     ws.onMessage(webSocketHandler);

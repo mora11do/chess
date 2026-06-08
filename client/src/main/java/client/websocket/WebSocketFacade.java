@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-//need to extend Endpoint for websocket to work properly
 public class WebSocketFacade extends Endpoint {
 
     Session session;
@@ -29,15 +28,11 @@ public class WebSocketFacade extends Endpoint {
         try {
             url = url.replace("http", "ws");
             URI socketURI = new URI(url + "/ws");
-            System.out.println("Connecting to: " + url + "/ws");
             this.notificationHandler = notificationHandler;
 
             WebSocketContainer container = ContainerProvider.getWebSocketContainer();
             this.session = container.connectToServer(this, socketURI);
 
-            System.out.println("Connected to server: " + this.session.isOpen());
-
-            //set message handler
             this.session.addMessageHandler(new MessageHandler.Whole<String>() {
                 @Override
                 public void onMessage(String message) {
@@ -58,7 +53,6 @@ public class WebSocketFacade extends Endpoint {
         }
     }
 
-    //Endpoint requires this method, but you don't have to do anything
     @Override
     public void onOpen(Session session, EndpointConfig endpointConfig) {
     }

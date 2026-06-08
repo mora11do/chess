@@ -40,6 +40,9 @@ public class GameplayREPL implements NotificationHandler {
     }
 
     public void run() {
+        if (isObserver){
+            redraw();
+        }
         System.out.print(help());
 
         Scanner scanner = new Scanner(System.in);
@@ -56,6 +59,13 @@ public class GameplayREPL implements NotificationHandler {
                 }
             }
             else{
+                try {
+                    result = eval(line);
+                    System.out.println(result);
+                } catch (Throwable e) {
+                    var msg = e.toString();
+                    System.out.print(msg);
+                }
                 result = "leave";
             }
         }
@@ -124,7 +134,7 @@ public class GameplayREPL implements NotificationHandler {
 
     public String leave() throws IOException{
         ws.leaveGame();
-        return "leave";
+        return "";
     }
 
     public ChessPosition easyChessPosition(String letterNumber){
