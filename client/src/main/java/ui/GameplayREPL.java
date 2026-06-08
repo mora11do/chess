@@ -299,15 +299,13 @@ public class GameplayREPL implements NotificationHandler {
                     if (!(placesToHighlight==null)){
                         for (var move:placesToHighlight) {
                             ChessPosition legalMove = move.getEndPosition();
-                            if (playerColor.equals("WHITE") || playerColor.equals("white")) {
-                                if (legalMove.getColumn() == col && legalMove.getRow() == 9-row) {
+                            if ((playerColor.equals("WHITE") || playerColor.equals("white")) &&
+                                    legalMove.getColumn() == col && legalMove.getRow() == 9-row) {
                                     setHighlightBGColor();
-                                }
                             }
-                            else{
-                                if (legalMove.getColumn() == 9-col && legalMove.getRow() == row) {
+                            else if ((playerColor.equals("BLACK") || playerColor.equals("black")) &&
+                                        legalMove.getColumn() == col && legalMove.getRow() == 9-row) {
                                     setHighlightBGColor();
-                                }
                             }
                         }
                     }
