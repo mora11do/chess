@@ -271,6 +271,20 @@ public class GameplayREPL implements NotificationHandler {
         drawBoard(null);
     }
 
+    public void loopInsideDrawBoard(ArrayList<ChessMove> placesToHighlight, int col, int row){
+        for (var move:placesToHighlight) {
+            ChessPosition legalMove = move.getEndPosition();
+            if ((playerColor.equals("WHITE") || playerColor.equals("white")) &&
+                    legalMove.getColumn() == col && legalMove.getRow() == 9-row) {
+                setHighlightBGColor();
+            }
+            else if ((playerColor.equals("BLACK") || playerColor.equals("black")) &&
+                    legalMove.getColumn() == col && legalMove.getRow() == 9-row) {
+                setHighlightBGColor();
+            }
+        }
+    }
+
     public void drawBoard(ArrayList<ChessMove> placesToHighlight){
         System.out.print(EscapeSequences.SET_BG_COLOR_BLACK);
         System.out.println();
@@ -297,17 +311,7 @@ public class GameplayREPL implements NotificationHandler {
                     }
                     setWhiteBGColor(row, col);
                     if (!(placesToHighlight==null)){
-                        for (var move:placesToHighlight) {
-                            ChessPosition legalMove = move.getEndPosition();
-                            if ((playerColor.equals("WHITE") || playerColor.equals("white")) &&
-                                    legalMove.getColumn() == col && legalMove.getRow() == 9-row) {
-                                    setHighlightBGColor();
-                            }
-                            else if ((playerColor.equals("BLACK") || playerColor.equals("black")) &&
-                                        legalMove.getColumn() == col && legalMove.getRow() == 9-row) {
-                                    setHighlightBGColor();
-                            }
-                        }
+                        loopInsideDrawBoard(placesToHighlight, col, row);
                     }
                     if (piece == null){
                         System.out.print(EscapeSequences.EMPTY);
