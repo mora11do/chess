@@ -262,6 +262,8 @@ public class GameplayREPL implements NotificationHandler {
     }
 
     public void drawBoard(ArrayList<ChessMove> placesToHighlight){
+        System.out.print(EscapeSequences.SET_BG_COLOR_BLACK);
+        System.out.println();
         if (playerColor.equals("WHITE") || playerColor.equals("white")) {
             printWhiteLetterRow();
         }

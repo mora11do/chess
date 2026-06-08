@@ -2,6 +2,7 @@ package server.websocket;
 
 import chess.ChessGame;
 import chess.ChessMove;
+import chess.ChessPosition;
 import chess.InvalidMoveException;
 import com.google.gson.Gson;
 import dataaccess.AuthDAO;
@@ -107,6 +108,12 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         connections.broadcast(session, notification, gameID);
     }
 
+    private String turnChessPositionIntoLetterNumber(ChessPosition position){
+        char letter = (char) (position.getColumn() + 'a' - 1);
+        char number = (char) (position.getRow() + '0');
+        return "" + letter + number;
+    }
+
     private void makeMove(Integer gameID, Session session, ChessMove move, String username)
             throws IOException, InvalidMoveException {
         System.out.println("GameID: " + gameID + " Move: " + move);
@@ -139,7 +146,9 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         gameDAO.updateGame(dummyGameJustForGameIDToBeAccurate, gameData);
         LoadGameMessage loadGameMessage = new LoadGameMessage(game);
         connections.broadcast(null, loadGameMessage,gameID);
-        var message = String.format("%s has moved to %s", move.getStartPosition().toString(), move.getEndPosition().toString());
+        var message = String.format("%s has moved to %s",
+                turnChessPositionIntoLetterNumber(move.getStartPosition()),
+                turnChessPositionIntoLetterNumber(move.getEndPosition()));
         NotificationMessage moveNotification = new NotificationMessage(message);
         connections.broadcast(session,moveNotification, gameID);
         String checkMessage = "NONE";
